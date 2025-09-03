@@ -1,6 +1,7 @@
 package com.example.hello_friends.user.domain;
 
 import com.example.hello_friends.common.entity.EntityState;
+import com.example.hello_friends.common.entity.LogEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -10,7 +11,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
 @Table(name = "user")
-public class User {
+public class User extends LogEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name="user_id")
@@ -44,6 +45,7 @@ public class User {
 
 
     public User(String name, String nickname, String phone, String email, String address, Long authId) {
+        super();
         this.name = name;
         this.nickname = nickname;
         this.phone = phone;
