@@ -41,4 +41,16 @@ public class User {
 
     @Column(nullable = false)
     private Long authId;
+
+
+    public User(String name, String nickname, String phone, String email, String address, Long authId) {
+        this.name = name;
+        this.nickname = nickname;
+        this.phone = phone;
+        this.email = email;
+        this.address = address;
+        this.userRole = UserRole.CUSTOMER;
+        this.state = EntityState.ACTIVE;
+        this.authId = authId;
+    }
 }
