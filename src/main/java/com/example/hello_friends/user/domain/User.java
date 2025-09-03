@@ -55,4 +55,11 @@ public class User extends LogEntity {
         this.state = EntityState.ACTIVE;
         this.authId = authId;
     }
+
+    public void update(String name, String nickname, String phone, String email, String address){
+        this.name = name;
+        this.nickname = nickname;
+        this.phone = phone;
+        this.email = email;
+        this.address = address;    }
 }
