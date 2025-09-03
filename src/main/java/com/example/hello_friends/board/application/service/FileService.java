@@ -9,6 +9,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.UUID;
 
 @Service
@@ -59,7 +61,7 @@ public class FileService {
     }
 
     private String createDatePath() {
-        // 실제 구현에서는 LocalDateTime.now()를 사용하여 현재 날짜 기반으로 생성
-        return "2025/03/03";
+        LocalDateTime now = LocalDateTime.now();
+        return now.format(DateTimeFormatter.ofPattern("yyyy/MM/dd"));
     }
 }

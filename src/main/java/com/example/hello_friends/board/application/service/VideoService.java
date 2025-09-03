@@ -3,12 +3,16 @@ package com.example.hello_friends.board.application.service;
 import com.example.hello_friends.board.application.request.VideoInfo;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;    // 여기가 수정된 부분!
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.UUID;
 
 @Slf4j
@@ -45,10 +49,10 @@ public class VideoService {
             File destFile = new File(fullPath + File.separator + storedFilename);
             file.transferTo(destFile);
 
-            // 썸네일 생성 (FFmpeg 등을 사용하여 구현)
+            // 썸네일 생성
             String thumbnailPath = generateThumbnail(fullPath, storedFilename);
 
-            // 동영상 길이 추출 (FFmpeg 등을 사용하여 구현)
+            // 동영상 길이 추출
             Integer duration = extractDuration(fullPath + File.separator + storedFilename);
 
             return VideoInfo.builder()
@@ -71,19 +75,63 @@ public class VideoService {
     }
 
     private String createDatePath() {
-        // 년/월/일 형식의 경로 생성
-        return "2025/03/03"; // 실제로는 현재 날짜 기반으로 생성
+        LocalDateTime now = LocalDateTime.now();
+        return now.format(DateTimeFormatter.ofPattern("yyyy/MM/dd"));
     }
 
     private String generateThumbnail(String path, String filename) {
-        // FFmpeg를 사용하여 썸네일 생성
-        // 실제 구현 필요
-        return path + "/thumb_" + filename + ".jpg";
+        try {
+            String thumbnailName = "thumb_" + filename + ".jpg";
+            String thumbnailPath = path + File.separator + thumbnailName;
+
+            // FFmpeg 명령어 구성
+            ProcessBuilder pb = new ProcessBuilder(
+                    "ffmpeg",
+                    "-i", path + File.separator + filename,
+                    "-ss", "00:00:01",  // 1초 지점
+                    "-vframes", "1",     // 1개 프레임
+                    "-s", "320x240",     // 썸네일 크기
+                    thumbnailPath
+            );
+
+            Process process = pb.start();
+            process.waitFor();
+
+            if (process.exitValue() != 0) {
+                throw new RuntimeException("썸네일 생성 실패");
+            }
+
+            return thumbnailPath;
+        } catch (Exception e) {
+            log.error("썸네일 생성 실패: ", e);
+            throw new RuntimeException("썸네일 생성 중 오류가 발생했습니다.", e);
+        }
     }
 
     private Integer extractDuration(String videoPath) {
-        // FFmpeg를 사용하여 동영상 길이 추출
-        // 실제 구현 필요
-        return 180; // 예시 값
+        try {
+            ProcessBuilder pb = new ProcessBuilder(
+                    "ffprobe",
+                    "-v", "error",
+                    "-show_entries", "format=duration",
+                    "-of", "default=noprint_wrappers=1:nokey=1",
+                    videoPath
+            );
+
+            Process process = pb.start();
+            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            String duration = reader.readLine();
+            process.waitFor();
+
+            if (process.exitValue() != 0) {
+                throw new RuntimeException("동영상 길이 추출 실패");
+            }
+
+            // 초 단위로 반올림하여 반환
+            return (int) Math.round(Double.parseDouble(duration));
+        } catch (Exception e) {
+            log.error("동영상 길이 추출 실패: ", e);
+            throw new RuntimeException("동영상 길이 추출 중 오류가 발생했습니다.", e);
+        }
     }
 }
