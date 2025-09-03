@@ -1,5 +1,6 @@
 package com.example.hello_friends.board.domain;
 
+import com.example.hello_friends.common.entity.EntityState;
 import com.example.hello_friends.common.entity.LogEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -49,17 +50,29 @@ public class BoardFile extends LogEntity {
     @Column(name = "thumbnail_path")
     private String thumbnailPath; // 동영상 썸네일 경로
 
+    @Column(name = "file_state", nullable = false)
+    @Enumerated(EnumType.STRING)
+    private EntityState state;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "process_status")
+    private FileProcessStatus processStatus; // 처리 상태 필드 추가
+
+    @Column(name = "process_fail_reason", length = 1000)
+    private String processFailReason; // 처리 실패 시 원인을 기록할 필드
+
     // Board 설정 메서드
     protected void setBoard(Board board) {
         this.board = board;
     }
 
-    // 생성자 - 이미지용
-    public static BoardFile createImage(String originalName, String storedName,
-                                        String filePath, Long fileSize,
-                                        String mimeType, Integer sortOrder) {
+    // 동영상 파일 초기 생성
+    public static BoardFile createVideoForProcessing(String originalName, String storedName,
+                                                     String filePath, Long fileSize, String mimeType, Integer sortOrder) {
         BoardFile file = new BoardFile();
-        file.fileType = FileType.IMAGE;
+        file.fileType = FileType.VIDEO;
+        file.processStatus = FileProcessStatus.PROCESSING;
+        file.state = EntityState.ACTIVE;
         file.originalName = originalName;
         file.storedName = storedName;
         file.filePath = filePath;
@@ -69,21 +82,33 @@ public class BoardFile extends LogEntity {
         return file;
     }
 
-    // 생성자 - 동영상용
-    public static BoardFile createVideo(String originalName, String storedName,
-                                        String filePath, Long fileSize,
-                                        String mimeType, Integer sortOrder,
-                                        Integer duration, String thumbnailPath) {
+    // 비동기 처리 완료 후 정보를 업데이트하는 메소드
+    public void processingComplete(Integer duration, String thumbnailPath) {
+        this.duration = duration;
+        this.thumbnailPath = thumbnailPath;
+        this.processStatus = FileProcessStatus.COMPLETE;
+    }
+
+    // 비동기 처리 실패 시 정보를 업데이트하는 메소드
+    public void processingFailed(String reason) {
+        this.processStatus = FileProcessStatus.FAILED;
+        this.processFailReason = reason;
+    }
+
+    // 이미지 파일 초기 생성
+    public static BoardFile createImageForProcessing(String originalName, String storedName,
+                                                     String filePath, Long fileSize,
+                                                     String mimeType, Integer sortOrder) {
         BoardFile file = new BoardFile();
-        file.fileType = FileType.VIDEO;
+        file.fileType = FileType.IMAGE;
+        file.processStatus = FileProcessStatus.PROCESSING;
+        file.state = EntityState.ACTIVE;
         file.originalName = originalName;
         file.storedName = storedName;
         file.filePath = filePath;
         file.fileSize = fileSize;
         file.mimeType = mimeType;
         file.sortOrder = sortOrder;
-        file.duration = duration;
-        file.thumbnailPath = thumbnailPath;
         return file;
     }
 }

@@ -1,8 +1,6 @@
 package com.example.hello_friends.board.application.service;
 
 import com.example.hello_friends.board.application.request.BoardRequest;
-import com.example.hello_friends.board.application.request.FileInfo;
-import com.example.hello_friends.board.application.request.VideoInfo;
 import com.example.hello_friends.board.domain.Board;
 import com.example.hello_friends.board.domain.BoardFile;
 import com.example.hello_friends.board.domain.BoardRepository;
@@ -31,34 +29,18 @@ public class BoardService {
             for (int i = 0; i < files.size(); i++) {
                 MultipartFile file = files.get(i);
                 String mimeType = file.getContentType();
+                BoardFile boardFile;
 
-                if (mimeType.startsWith("image/")) {
-                    // 이미지 처리
-                    FileInfo fileInfo = fileService.uploadFile(file);
-                    BoardFile boardFile = BoardFile.createImage(
-                            fileInfo.getOriginalName(),
-                            fileInfo.getStoredName(),
-                            fileInfo.getFilePath(),
-                            fileInfo.getFileSize(),
-                            mimeType,
-                            i
-                    );
-                    board.addFile(boardFile);
-                } else if (mimeType.startsWith("video/")) {
-                    // 동영상 처리
-                    VideoInfo videoInfo = videoService.uploadVideo(file);
-                    BoardFile boardFile = BoardFile.createVideo(
-                            videoInfo.getOriginalName(),
-                            videoInfo.getStoredName(),
-                            videoInfo.getFilePath(),
-                            videoInfo.getFileSize(),
-                            mimeType,
-                            i,
-                            videoInfo.getDuration(),
-                            videoInfo.getThumbnailPath()
-                    );
-                    board.addFile(boardFile);
+                if (mimeType != null && mimeType.startsWith("image/")) {
+                    boardFile = fileService.uploadImageAndRequestProcessing(file, mimeType, i);
+                } else if (mimeType != null && mimeType.startsWith("video/")) {
+                    boardFile = videoService.uploadVideoAndRequestProcessing(file, mimeType, i);
+                } else {
+                    log.warn("지원하지 않는 파일 타입입니다: {}", mimeType);
+                    continue;
                 }
+
+                board.addFile(boardFile);
             }
         }
 
