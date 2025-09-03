@@ -32,7 +32,7 @@ public class UserDetailServiceImpl implements UserDetailsService {
             Optional<User> optionalUser = userRepository.findByAuthId(auth.getId());
             if (optionalUser.isPresent()) {
                 User user = optionalUser.get();
-                return UserPrincipal.of(user.getId(), auth.getLoginId(), auth.getPwd(), List.of(new SimpleGrantedAuthority(user.getUserRole().toRole().getRoleName())));
+                return UserPrincipal.of(user.getId(), auth.getLoginId(), auth.getPwd(), List.of(new SimpleGrantedAuthority(user.getUserRole().getRoleName())));
             }
         } catch (PrincipalArgumentException e) {
             throw new PrincipalArgumentException();
