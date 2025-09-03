@@ -61,5 +61,14 @@ public class User extends LogEntity {
         this.nickname = nickname;
         this.phone = phone;
         this.email = email;
-        this.address = address;    }
+        this.address = address;
+    }
+
+    public void delete(){
+        this.state = EntityState.DELETE;
+    }
+
+    public void activate(){
+        this.state = EntityState.ACTIVE;
+    }
 }

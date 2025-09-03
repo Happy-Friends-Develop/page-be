@@ -6,6 +6,8 @@ import com.example.hello_friends.auth.domain.Auth;
 import com.example.hello_friends.common.entity.EntityState;
 import com.example.hello_friends.user.application.Request.UserRequest;
 import com.example.hello_friends.user.application.Request.UserUpdateRequest;
+import com.example.hello_friends.user.domain.BlackUser;
+import com.example.hello_friends.user.domain.BlackUserRepository;
 import com.example.hello_friends.user.domain.User;
 import com.example.hello_friends.user.domain.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -13,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -21,6 +24,8 @@ import java.util.List;
 public class UserService {
     private final UserRepository userRepository;
     private final AuthService authService;
+    private final BlackUserRepository blackUserRepository;
+    private final BlackUserService blackUserService;
 
     @Transactional
     public User register(UserRequest userRequest) {
@@ -28,8 +33,13 @@ public class UserService {
             if (userRequest.getId() == null) {
                 throw new IllegalArgumentException("로그인 ID가 존재하지 않음");
             }
+
+            // 블랙리스트 검증
+            blackUserService.validateUserRegistration(userRequest.getEmail(), userRequest.getPhone());
+
             Auth auth = authService.registAuth(AuthBody.of(userRequest.getId(), userRequest.getPassword()));
-            User user = new User(userRequest.getName(), userRequest.getNickname(), userRequest.getPhone(), userRequest.getEmail(), userRequest.getAddress(), auth.getId());
+            User user = new User(userRequest.getName(), userRequest.getNickname(), userRequest.getPhone(),
+                    userRequest.getEmail(), userRequest.getAddress(), auth.getId());
             userRepository.save(user);
             return user;
         } catch (Exception e) {
@@ -89,11 +99,61 @@ public class UserService {
         userRepository.deleteById(id);
     }
 
-    // 사용자 블랙리스트
-    public User blackListUser(Long id) {
-        // 기존 사용자 Stata를 DELETE로 변경하고
-        // id를 블랙리스트 테이블에 추가
-        // 블랙리스트 테이블에 있는 계정은 회원가입 및 로그인 불가
-        return null;
+    @Transactional
+    public User blackListUser(Long id, String reason, LocalDateTime endDate) {
+        try {
+            User user = userRepository.findByIdAndState(id, EntityState.ACTIVE)
+                    .orElseThrow(() -> new IllegalArgumentException("ID " + id + "에 해당하는 사용자를 찾을 수 없음"));
+
+            // 이미 블랙리스트에 있는지 확인
+            if (blackUserRepository.existsByUserAndState(user, EntityState.ACTIVE)) {
+                BlackUser existingBlackUser = blackUserRepository.findByUserAndState(user, EntityState.ACTIVE)
+                        .orElseThrow();
+                existingBlackUser.updateBlackEndDate(endDate);
+                existingBlackUser.addAdminMemo("경고 횟수 증가 및 제재기간 연장: " + reason);
+                return user;
+            }
+
+            // 사용자 상태를 DELETE로 변경
+            user.delete();
+
+            // 블랙리스트에 추가
+            BlackUser blackUser = new BlackUser(user, reason, endDate);
+            blackUserRepository.save(blackUser);
+
+            return user;
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            log.warn(e.getMessage());
+            throw e;
+        } catch (Exception e) {
+            log.error("블랙리스트 등록 실패: id={}", id, e);
+            throw new RuntimeException("블랙리스트 등록 중 오류 발생", e);
+        }
+    }
+
+    // 블랙리스트 해제
+    @Transactional
+    public User unblackListUser(Long id, String memo) {
+        try {
+            User user = userRepository.findById(id)
+                    .orElseThrow(() -> new IllegalArgumentException("ID " + id + "에 해당하는 사용자를 찾을 수 없음"));
+
+            BlackUser blackUser = blackUserRepository.findByUserAndState(user, EntityState.ACTIVE)
+                    .orElseThrow(() -> new IllegalStateException("블랙리스트에 등록되지 않은 사용자입니다."));
+
+            // 블랙리스트 비활성화
+            blackUser.deactivate(memo);
+
+            // 사용자 상태 복구
+            user.activate();
+
+            return user;
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            log.warn(e.getMessage());
+            throw e;
+        } catch (Exception e) {
+            log.error("블랙리스트 해제 실패: id={}", id, e);
+            throw new RuntimeException("블랙리스트 해제 중 오류 발생", e);
+        }
     }
 }
