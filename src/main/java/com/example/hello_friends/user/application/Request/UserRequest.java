@@ -1,4 +1,4 @@
-package com.example.hello_friends.user.application;
+package com.example.hello_friends.user.application.Request;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;

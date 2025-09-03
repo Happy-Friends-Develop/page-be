@@ -1,8 +1,11 @@
-package com.example.hello_friends.user.application;
+package com.example.hello_friends.user.application.Service;
 
 import com.example.hello_friends.auth.application.AuthBody;
 import com.example.hello_friends.auth.application.AuthService;
 import com.example.hello_friends.auth.domain.Auth;
+import com.example.hello_friends.common.entity.EntityState;
+import com.example.hello_friends.user.application.Request.UserRequest;
+import com.example.hello_friends.user.application.Request.UserUpdateRequest;
 import com.example.hello_friends.user.domain.User;
 import com.example.hello_friends.user.domain.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -39,7 +42,7 @@ public class UserService {
     @Transactional(readOnly = true)
     public User findUserInformation(Long id) {
         try {
-            return userRepository.findById(id)
+            return userRepository.findByIdAndState(id, EntityState.ACTIVE)
                     .orElseThrow(() -> new IllegalArgumentException("ID " + id + "에 해당하는 사용자를 찾을 수 없음"));
         } catch (IllegalArgumentException e) {
             log.warn(e.getMessage());
@@ -54,7 +57,7 @@ public class UserService {
     @Transactional(readOnly = true)
     public List<User> findUsersInformation() {
         try {
-            return userRepository.findAll();
+            return userRepository.findAllByState(EntityState.ACTIVE);
         } catch (Exception e) {
             log.error("전체 사용자 정보 조회 실패", e);
             throw new RuntimeException("전체 사용자 정보 조회 중 오류 발생", e);
@@ -65,7 +68,7 @@ public class UserService {
     @Transactional
     public User updateUserInformation(Long id, UserUpdateRequest userUpdateRequest) {
         try {
-            User user = userRepository.findById(id)
+            User user = userRepository.findByIdAndState(id, EntityState.ACTIVE)
                     .orElseThrow(() -> new IllegalArgumentException("ID " + id + "에 해당하는 사용자를 찾을 수 없어 수정 불가"));
 
             user.update(userUpdateRequest.getName(), userUpdateRequest.getNickname(), userUpdateRequest.getPhone(), userUpdateRequest.getEmail(), userUpdateRequest.getAddress());
@@ -78,5 +81,19 @@ public class UserService {
             log.error("사용자 정보 수정 실패: id={}", id, e);
             throw new RuntimeException("사용자 정보 수정 중 오류 발생", e);
         }
+    }
+
+    // 사용자 탈퇴
+    @Transactional
+    public void deleteUser(Long id) {
+        userRepository.deleteById(id);
+    }
+
+    // 사용자 블랙리스트
+    public User blackListUser(Long id) {
+        // 기존 사용자 Stata를 DELETE로 변경하고
+        // id를 블랙리스트 테이블에 추가
+        // 블랙리스트 테이블에 있는 계정은 회원가입 및 로그인 불가
+        return null;
     }
 }
