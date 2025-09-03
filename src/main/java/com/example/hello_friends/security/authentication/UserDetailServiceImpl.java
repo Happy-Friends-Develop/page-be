@@ -21,18 +21,23 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class UserDetailServiceImpl implements UserDetailsService {
     private final AuthRepository authRepository;
-    private  final UserRepository userRepository;
+    private final UserRepository userRepository;
 
     @Override
     public UserDetails loadUserByUsername(String loginId) throws UsernameNotFoundException {
-
         try {
-            Auth auth = authRepository.findByLoginId(loginId).orElseThrow(() -> new BadCredentialsException("계정 정보가 없습니다."));
+            Auth auth = authRepository.findByLoginId(loginId)
+                    .orElseThrow(() -> new BadCredentialsException("계정 정보가 없습니다."));
 
             Optional<User> optionalUser = userRepository.findByAuthId(auth.getId());
             if (optionalUser.isPresent()) {
                 User user = optionalUser.get();
-                return UserPrincipal.of(user.getId(), auth.getLoginId(), auth.getPwd(), List.of(new SimpleGrantedAuthority(user.getUserRole().getRoleName())));
+                return UserPrincipal.of(
+                        user.getId(),
+                        auth.getLoginId(),
+                        auth.getPwd(),
+                        List.of(new SimpleGrantedAuthority(user.getUserRole().toRole().getRoleName()))
+                );
             }
         } catch (PrincipalArgumentException e) {
             throw new PrincipalArgumentException();
