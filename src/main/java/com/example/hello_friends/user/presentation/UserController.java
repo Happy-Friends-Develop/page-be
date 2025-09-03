@@ -1,9 +1,9 @@
 package com.example.hello_friends.user.presentation;
 
 import com.example.hello_friends.common.response.Resp;
-import com.example.hello_friends.user.application.UserRequest;
-import com.example.hello_friends.user.application.UserService;
-import com.example.hello_friends.user.application.UserUpdateRequest;
+import com.example.hello_friends.user.application.Request.UserRequest;
+import com.example.hello_friends.user.application.Service.UserService;
+import com.example.hello_friends.user.application.Request.UserUpdateRequest;
 import com.example.hello_friends.user.domain.User;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -43,5 +43,12 @@ public class UserController {
     @PutMapping("/api/user/{id}")
     public User updateUserInfo(@PathVariable Long id, @RequestBody UserUpdateRequest userUpdateRequest){
         return userService.updateUserInformation(id, userUpdateRequest);
+    }
+
+    @Operation(summary = "유저 탈퇴", description = "회원이 탈퇴합니다.")
+    @DeleteMapping("/api/user/{id}")
+    public Resp<String> deleteUser(@PathVariable Long id){
+        userService.deleteUser(id);
+        return Resp.ok("회원 정보가 삭제되었습니다.");
     }
 }
