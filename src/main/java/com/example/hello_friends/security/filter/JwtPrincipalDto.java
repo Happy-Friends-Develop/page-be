@@ -5,8 +5,7 @@ import lombok.Data;
 @Data
 public class JwtPrincipalDto {
     private Long id; // id
-    private String type; // KIOSK, USER
-
+    private String type; // USER
 
     public JwtPrincipalDto(Long id, String type) {
         this.type = type;
