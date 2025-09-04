@@ -4,6 +4,7 @@ import com.example.hello_friends.common.entity.EntityState;
 import com.example.hello_friends.user.domain.*; // User, UserRepository 등 임포트
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -37,6 +38,7 @@ public class BlackUserService {
 
     // 사용자에게 경고를 1회 추가하고, 경고 횟수가 3회 이상이면 블랙리스트로 처리하는 메소드
     @Transactional
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     public void addWarningAndBlacklistIfNeeded(Long userId, String reason) {
         User user = userRepository.findByIdAndState(userId, EntityState.ACTIVE)
                 .orElseThrow(() -> new IllegalArgumentException("경고를 줄 사용자를 찾을 수 없음: id=" + userId));

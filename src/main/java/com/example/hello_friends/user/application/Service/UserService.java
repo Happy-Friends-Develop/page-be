@@ -12,6 +12,7 @@ import com.example.hello_friends.user.domain.User;
 import com.example.hello_friends.user.domain.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -99,7 +100,9 @@ public class UserService {
         userRepository.deleteById(id);
     }
 
+    // 블랙리스트 추가
     @Transactional
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     public User blackListUser(Long id, String reason, LocalDateTime endDate) {
         try {
             User user = userRepository.findByIdAndState(id, EntityState.ACTIVE)
@@ -133,6 +136,7 @@ public class UserService {
 
     // 블랙리스트 해제
     @Transactional
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     public User unblackListUser(Long id, String memo) {
         try {
             User user = userRepository.findById(id)
