@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -24,8 +25,14 @@ public class Board extends LogEntity {
     @Column(name = "board_content", columnDefinition = "TEXT")
     private String content;
 
+    @Column(name = "board_view")
+    private Long view;
+
     @OneToMany(mappedBy = "board", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<BoardFile> files = new ArrayList<>();
+
+    @OneToMany(mappedBy = "board", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<BoardLike> likes = new ArrayList<>();
 
     // 파일 추가 메서드
     public void addFile(BoardFile file) {
@@ -39,7 +46,22 @@ public class Board extends LogEntity {
         file.setBoard(null);
     }
 
-    public Board(String title, String content){
+    // 총 좋아요 수
+    public int getLikeCount() {
+        return likes.size();
+    }
+
+    public void increaseView(){
+        this.view += 1;
+    }
+
+    public Board(String title, String content, Long view){
+        this.title = title;
+        this.content = content;
+        this.view = view;
+    }
+
+    public void update(String title, String content){
         this.title = title;
         this.content = content;
     }

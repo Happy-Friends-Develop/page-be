@@ -12,4 +12,5 @@ import lombok.NoArgsConstructor;
 public class BoardRequest {
     private String title;       // 게시글 제목
     private String content;     // 게시글 내용
+    private Long view;
 }
