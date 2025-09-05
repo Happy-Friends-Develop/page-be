@@ -30,7 +30,10 @@ public class BoardService {
 
     // 보드 생성
     @Transactional
-    public BoardResponse createBoard(BoardRequest request, List<MultipartFile> files, User user) {
+    public BoardResponse createBoard(BoardRequest request, List<MultipartFile> files, Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("ID " + userId + "에 해당하는 사용자를 찾을 수 없음"));
+
         Board board = new Board(request.getTitle(), request.getContent(), user);
 
         if (files != null && !files.isEmpty()) {
@@ -54,16 +57,7 @@ public class BoardService {
 
         Board savedBoard = boardRepository.save(board);
 
-        BoardResponse boardResponse = new BoardResponse();
-        boardResponse.setId(savedBoard.getId());
-        boardResponse.setTitle(savedBoard.getTitle());
-        boardResponse.setContent(savedBoard.getContent());
-        boardResponse.setView(savedBoard.getView());
-        boardResponse.setAuthorNickname(savedBoard.getUser().getNickname());
-        boardResponse.setCreatedAt(savedBoard.getCreatedAt());
-        boardResponse.setLikeCount(savedBoard.getLikes().size());
-
-        return boardResponse;
+        return BoardResponse.from(savedBoard);
     }
 
     @Transactional(readOnly = true)
@@ -71,19 +65,8 @@ public class BoardService {
         Board board = boardRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("해당 게시글이 없습니다. id=" + id));
 
-        BoardResponse responseDto = new BoardResponse();
+        return BoardResponse.from(board);
 
-        responseDto.setId(board.getId());
-        responseDto.setTitle(board.getTitle());
-        responseDto.setContent(board.getContent());
-        responseDto.setView(board.getView());
-        responseDto.setAuthorNickname(board.getUser().getNickname());
-        responseDto.setCreatedAt(board.getCreatedAt());
-
-
-        responseDto.setLikeCount(board.getLikes().size());
-
-        return responseDto;
     }
 
     // 게시글 조회

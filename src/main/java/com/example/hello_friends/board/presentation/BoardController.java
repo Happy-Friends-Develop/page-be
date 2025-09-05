@@ -8,7 +8,6 @@ import com.example.hello_friends.common.response.Resp;
 import com.example.hello_friends.security.annotation.Auth;
 import com.example.hello_friends.security.filter.JwtPrincipalDto;
 import com.example.hello_friends.user.application.service.UserService;
-import com.example.hello_friends.user.domain.User;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -41,8 +40,7 @@ public class BoardController {
                 .content(content)
                 .build();
 
-        User currentUser = userService.findUserInformation(jwtPrincipalDto.getId());
-        return boardService.createBoard(boardRequest, files, currentUser);
+        return boardService.createBoard(boardRequest, files, jwtPrincipalDto.getId());
     }
 
     @Operation(summary = "게시글 단건 조회", description = "게시글 ID로 특정 게시글을 조회합니다. 조회수가 증가합니다.")
