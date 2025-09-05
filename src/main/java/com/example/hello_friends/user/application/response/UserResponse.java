@@ -17,6 +17,7 @@ public class UserResponse {
         responseDto.setId(user.getId());
         responseDto.setName(user.getName());
         responseDto.setNickname(user.getNickname());
+        responseDto.setPhone(user.getPhone());
         responseDto.setEmail(user.getEmail());
         responseDto.setAddress(user.getAddress());
         return responseDto;
