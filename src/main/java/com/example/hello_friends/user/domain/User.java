@@ -50,7 +50,7 @@ public class User extends LogEntity {
     private Long authId;
 
     @JsonManagedReference
-    @OneToMany(mappedBy = "user")
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Board> boards = new ArrayList<>();
 
     @JsonManagedReference

@@ -3,11 +3,10 @@ package com.example.hello_friends.board.presentation;
 import com.example.hello_friends.board.application.request.BoardRequest;
 import com.example.hello_friends.board.application.response.BoardResponse;
 import com.example.hello_friends.board.application.service.BoardService;
-import com.example.hello_friends.board.domain.Board;
+import com.example.hello_friends.comment.domain.CommentRepository;
 import com.example.hello_friends.common.response.Resp;
 import com.example.hello_friends.security.annotation.Auth;
 import com.example.hello_friends.security.filter.JwtPrincipalDto;
-import com.example.hello_friends.user.application.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -25,7 +24,6 @@ import java.util.List;
 @Tag(name = "게시글")
 public class BoardController {
     private final BoardService boardService;
-    private final UserService userService;
 
     @Operation(summary = "게시판 추가", description = "게시판을 추가합니다. 파일 업로드도 가능합니다.")
     @PostMapping(value = "/api/user/board", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)

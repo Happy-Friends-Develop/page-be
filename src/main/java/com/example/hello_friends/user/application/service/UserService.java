@@ -80,24 +80,9 @@ public class UserService {
         return UserResponse.from(user);
     }
 
-    // 사용자 탈퇴
     @Transactional
     public void deleteUser(Long userId) {
-        // 삭제할 사용자 조회
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("ID " + userId + "에 해당하는 사용자가 없습니다."));
-
-        // 해당 사용자가 작성한 게시글을 모두 조회
-        List<Board> boards = boardRepository.findByUser(user);
-
-        // 각 게시글에 달린 '좋아요'를 먼저 모두 삭제
-        boards.forEach(boardLikeRepository::deleteByBoard);
-
-        // 게시글 삭제
-        boardRepository.deleteAll(boards);
-
-        // 사용자를 삭제
-        userRepository.delete(user);
+        userRepository.deleteById(userId);
     }
 
     // 블랙리스트 추가
