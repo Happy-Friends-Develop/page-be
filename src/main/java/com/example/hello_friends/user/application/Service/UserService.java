@@ -3,6 +3,8 @@ package com.example.hello_friends.user.application.Service;
 import com.example.hello_friends.auth.application.AuthBody;
 import com.example.hello_friends.auth.application.AuthService;
 import com.example.hello_friends.auth.domain.Auth;
+import com.example.hello_friends.board.domain.BoardLikeRepository;
+import com.example.hello_friends.board.domain.BoardRepository;
 import com.example.hello_friends.common.entity.EntityState;
 import com.example.hello_friends.user.application.Request.UserRequest;
 import com.example.hello_friends.user.application.Request.UserUpdateRequest;
@@ -27,6 +29,8 @@ public class UserService {
     private final AuthService authService;
     private final BlackUserRepository blackUserRepository;
     private final BlackUserService blackUserService;
+    private final BoardLikeRepository boardLikeRepository;
+    private final BoardRepository boardRepository;
 
     @Transactional
     public User register(UserRequest userRequest) {
@@ -95,8 +99,11 @@ public class UserService {
     }
 
     // 사용자 탈퇴
+    // 유저에 매핑된 테이블 내용 전부 다 삭제
     @Transactional
     public void deleteUser(Long id) {
+        boardLikeRepository.deleteById(id);
+        boardRepository.deleteById(id);
         userRepository.deleteById(id);
     }
 
