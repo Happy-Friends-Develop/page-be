@@ -11,7 +11,7 @@ public class UserRequest {
     private String id;
 
     @NotBlank
-    @Schema(description = "비밀번호", example = "1111")
+    @Schema(description = "비밀번호", example = "@Malsdud0414")
     private String password;
 
     @NotBlank
