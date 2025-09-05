@@ -30,7 +30,7 @@ public class BoardService {
     // 보드 생성
     @Transactional
     public Board createBoard(BoardRequest request, List<MultipartFile> files) {
-        Board board = new Board(request.getTitle(), request.getContent(), request.getView());
+        Board board = new Board(request.getTitle(), request.getContent());
 
         if (files != null && !files.isEmpty()) {
             for (int i = 0; i < files.size(); i++) {
