@@ -1,5 +1,6 @@
 package com.example.hello_friends.board.domain;
 
+import com.example.hello_friends.comment.domain.Comment;
 import com.example.hello_friends.common.entity.LogEntity;
 import com.example.hello_friends.user.domain.User;
 import com.fasterxml.jackson.annotation.JsonBackReference;
@@ -44,6 +45,10 @@ public class Board extends LogEntity {
     @JsonManagedReference
     @OneToMany(mappedBy = "board", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<BoardLike> likes = new ArrayList<>();
+
+    @JsonManagedReference
+    @OneToMany(mappedBy = "board", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Comment> comments = new ArrayList<>();
 
     // 파일 추가 메서드
     public void addFile(BoardFile file) {
