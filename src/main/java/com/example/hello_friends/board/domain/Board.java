@@ -4,7 +4,6 @@ import com.example.hello_friends.comment.domain.Comment;
 import com.example.hello_friends.common.entity.LogEntity;
 import com.example.hello_friends.user.domain.User;
 import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
