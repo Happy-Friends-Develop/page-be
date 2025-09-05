@@ -1,19 +1,11 @@
-package com.example.hello_friends.user.application.Request;
+package com.example.hello_friends.user.application.request;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
 @Data
-public class UserRequest {
-    @NotBlank
-    @Schema(description = "아이디", example = "dev")
-    private String id;
-
-    @NotBlank
-    @Schema(description = "비밀번호", example = "@Malsdud0414")
-    private String password;
-
+public class UserUpdateRequest {
     @NotBlank
     @Schema(description = "이름", example = "개발용 계정")
     private String name;

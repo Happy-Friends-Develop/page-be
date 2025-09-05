@@ -1,4 +1,4 @@
-package com.example.hello_friends.user.application.Service;
+package com.example.hello_friends.user.application.service;
 
 import com.example.hello_friends.auth.application.AuthBody;
 import com.example.hello_friends.auth.application.AuthService;
@@ -6,8 +6,8 @@ import com.example.hello_friends.auth.domain.Auth;
 import com.example.hello_friends.board.domain.BoardLikeRepository;
 import com.example.hello_friends.board.domain.BoardRepository;
 import com.example.hello_friends.common.entity.EntityState;
-import com.example.hello_friends.user.application.Request.UserRequest;
-import com.example.hello_friends.user.application.Request.UserUpdateRequest;
+import com.example.hello_friends.user.application.request.UserRequest;
+import com.example.hello_friends.user.application.request.UserUpdateRequest;
 import com.example.hello_friends.user.domain.BlackUser;
 import com.example.hello_friends.user.domain.BlackUserRepository;
 import com.example.hello_friends.user.domain.User;

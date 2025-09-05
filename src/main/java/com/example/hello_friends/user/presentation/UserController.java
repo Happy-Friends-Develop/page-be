@@ -1,9 +1,9 @@
 package com.example.hello_friends.user.presentation;
 
 import com.example.hello_friends.common.response.Resp;
-import com.example.hello_friends.user.application.Request.*;
-import com.example.hello_friends.user.application.Service.BlackUserService;
-import com.example.hello_friends.user.application.Service.UserService;
+import com.example.hello_friends.user.application.request.*;
+import com.example.hello_friends.user.application.service.BlackUserService;
+import com.example.hello_friends.user.application.service.UserService;
 import com.example.hello_friends.user.domain.User;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;

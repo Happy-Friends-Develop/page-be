@@ -1,4 +1,4 @@
-package com.example.hello_friends.user.application.Request;
+package com.example.hello_friends.user.application.request;
 
 import org.springframework.format.annotation.DateTimeFormat;
 

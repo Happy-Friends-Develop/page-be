@@ -1,4 +1,4 @@
-package com.example.hello_friends.user.application.Service;
+package com.example.hello_friends.user.application.service;
 
 import com.example.hello_friends.common.entity.EntityState;
 import com.example.hello_friends.user.domain.*; // User, UserRepository 등 임포트
