@@ -1,6 +1,7 @@
 package com.example.hello_friends.board.application.service;
 
 import com.example.hello_friends.board.application.request.BoardRequest;
+import com.example.hello_friends.board.application.response.BoardResponse;
 import com.example.hello_friends.board.domain.*;
 import com.example.hello_friends.common.entity.EntityState;
 import com.example.hello_friends.user.domain.User;
@@ -29,8 +30,8 @@ public class BoardService {
 
     // 보드 생성
     @Transactional
-    public Board createBoard(BoardRequest request, List<MultipartFile> files) {
-        Board board = new Board(request.getTitle(), request.getContent());
+    public BoardResponse createBoard(BoardRequest request, List<MultipartFile> files, User user) {
+        Board board = new Board(request.getTitle(), request.getContent(), user);
 
         if (files != null && !files.isEmpty()) {
             for (int i = 0; i < files.size(); i++) {
@@ -51,7 +52,38 @@ public class BoardService {
             }
         }
 
-        return boardRepository.save(board);
+        Board savedBoard = boardRepository.save(board);
+
+        BoardResponse boardResponse = new BoardResponse();
+        boardResponse.setId(savedBoard.getId());
+        boardResponse.setTitle(savedBoard.getTitle());
+        boardResponse.setContent(savedBoard.getContent());
+        boardResponse.setView(savedBoard.getView());
+        boardResponse.setAuthorNickname(savedBoard.getUser().getNickname());
+        boardResponse.setCreatedAt(savedBoard.getCreatedAt());
+        boardResponse.setLikeCount(savedBoard.getLikes().size());
+
+        return boardResponse;
+    }
+
+    @Transactional(readOnly = true)
+    public BoardResponse findBoardById(Long id) {
+        Board board = boardRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("해당 게시글이 없습니다. id=" + id));
+
+        BoardResponse responseDto = new BoardResponse();
+
+        responseDto.setId(board.getId());
+        responseDto.setTitle(board.getTitle());
+        responseDto.setContent(board.getContent());
+        responseDto.setView(board.getView());
+        responseDto.setAuthorNickname(board.getUser().getNickname());
+        responseDto.setCreatedAt(board.getCreatedAt());
+
+
+        responseDto.setLikeCount(board.getLikes().size());
+
+        return responseDto;
     }
 
     // 게시글 조회
@@ -63,8 +95,12 @@ public class BoardService {
 
     // 게시글 목록 조회
     @Transactional(readOnly = true)
-    public List<Board> readBoardList(){
-        return boardRepository.findAll();
+    public List<BoardResponse> readBoardList(){
+        List<Board> boardList = boardRepository.findAll();
+
+        return boardList.stream()
+                .map(BoardResponse::from)
+                .toList();
     }
 
     // 게시글 수정
