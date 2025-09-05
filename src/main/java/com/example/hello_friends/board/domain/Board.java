@@ -46,19 +46,14 @@ public class Board extends LogEntity {
         file.setBoard(null);
     }
 
-    // 총 좋아요 수
-    public int getLikeCount() {
-        return likes.size();
-    }
-
     public void increaseView(){
         this.view += 1;
     }
 
-    public Board(String title, String content, Long view){
+    public Board(String title, String content){
         this.title = title;
         this.content = content;
-        this.view = view;
+        this.view = 0L;
     }
 
     public void update(String title, String content){
