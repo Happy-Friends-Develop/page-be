@@ -1,6 +1,10 @@
 package com.example.hello_friends.board.domain;
 
 import com.example.hello_friends.common.entity.LogEntity;
+import com.example.hello_friends.user.domain.User;
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -28,9 +32,16 @@ public class Board extends LogEntity {
     @Column(name = "board_view")
     private Long view;
 
+    @JsonBackReference
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    private User user;
+
+    @JsonManagedReference
     @OneToMany(mappedBy = "board", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<BoardFile> files = new ArrayList<>();
 
+    @JsonManagedReference
     @OneToMany(mappedBy = "board", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<BoardLike> likes = new ArrayList<>();
 
@@ -50,10 +61,11 @@ public class Board extends LogEntity {
         this.view += 1;
     }
 
-    public Board(String title, String content){
+    public Board(String title, String content, User user){
         this.title = title;
         this.content = content;
         this.view = 0L;
+        this.user = user;
     }
 
     public void update(String title, String content){

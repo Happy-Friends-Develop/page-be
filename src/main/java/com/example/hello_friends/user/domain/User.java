@@ -1,11 +1,17 @@
 package com.example.hello_friends.user.domain;
 
+import com.example.hello_friends.board.domain.Board;
+import com.example.hello_friends.board.domain.BoardLike;
 import com.example.hello_friends.common.entity.EntityState;
 import com.example.hello_friends.common.entity.LogEntity;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -42,6 +48,14 @@ public class User extends LogEntity {
 
     @Column(nullable = false)
     private Long authId;
+
+    @JsonManagedReference
+    @OneToMany(mappedBy = "user")
+    private List<Board> boards = new ArrayList<>();
+
+    @JsonManagedReference
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<BoardLike> likes = new ArrayList<>();
 
 
     public User(String name, String nickname, String phone, String email, String address, Long authId) {

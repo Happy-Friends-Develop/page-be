@@ -2,6 +2,7 @@ package com.example.hello_friends.board.domain;
 
 import com.example.hello_friends.common.entity.EntityState;
 import com.example.hello_friends.common.entity.LogEntity;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -17,6 +18,7 @@ public class BoardFile extends LogEntity {
     @Column(name = "file_id")
     private Long id;
 
+    @JsonBackReference
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "board_id")
     private Board board;
