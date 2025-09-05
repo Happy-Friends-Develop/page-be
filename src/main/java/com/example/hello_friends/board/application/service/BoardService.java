@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.nio.file.AccessDeniedException;
 import java.util.List;
 import java.util.Optional;
 
@@ -69,13 +70,6 @@ public class BoardService {
 
     }
 
-    // 게시글 조회
-    @Transactional(readOnly = true)
-    public Board readBoard(Long id){
-        return boardRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("해당 게시글이 존재하지 않습니다."));
-    }
-
     // 게시글 목록 조회
     @Transactional(readOnly = true)
     public List<BoardResponse> readBoardList(){
@@ -88,21 +82,22 @@ public class BoardService {
 
     // 게시글 수정
     @Transactional
-    public Board updateBoard(Long id, BoardRequest boardRequest){
-        try {
-            Board board = boardRepository.findById(id)
-                    .orElseThrow(() -> new IllegalArgumentException("해당 게시글이 존재하지 않습니다."));
+    public BoardResponse updateBoard(Long boardId, BoardRequest boardRequest, Long currentUserId) {
+        Board board = boardRepository.findById(boardId)
+                .orElseThrow(() -> new IllegalArgumentException("해당 게시글이 존재하지 않습니다. ID: " + boardId));
 
-            board.update(boardRequest.getTitle(), boardRequest.getContent());
-
-            return board;
-        } catch (IllegalArgumentException e) {
-            log.warn(e.getMessage());
-            throw e;
-        } catch (Exception e) {
-            log.error("게시글 수정 실패: id={}", id, e);
-            throw new RuntimeException("게시글 정보 수정 중 오류 발생", e);
+        // 게시글 작성자의 ID와 현재 요청한 사용자의 ID가 같은지 확인
+        if (!board.getUser().getId().equals(currentUserId)) {
+            try {
+                throw new AccessDeniedException("게시글을 수정할 권한이 없습니다.");
+            } catch (AccessDeniedException e) {
+                throw new RuntimeException(e);
+            }
         }
+
+        board.update(boardRequest.getTitle(), boardRequest.getContent());
+
+        return BoardResponse.from(board);
     }
 
     // 게시글 삭제

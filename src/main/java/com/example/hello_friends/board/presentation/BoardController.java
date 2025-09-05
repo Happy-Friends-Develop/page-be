@@ -62,10 +62,11 @@ public class BoardController {
 
     @Operation(summary = "게시글 수정", description = "게시글 ID로 특정 게시글의 제목과 내용을 수정합니다.")
     @PutMapping("/api/user/board/{boardId}")
-    public Board updateBoard(
+    public BoardResponse updateBoard(
             @PathVariable Long boardId,
-            @RequestBody BoardRequest boardRequest) {
-        return boardService.updateBoard(boardId, boardRequest);
+            @RequestBody BoardRequest boardRequest,
+            @Auth JwtPrincipalDto jwtPrincipalDto) {
+        return boardService.updateBoard(boardId, boardRequest, jwtPrincipalDto.getId());
     }
 
     @Operation(summary = "게시글 삭제", description = "게시글 ID로 특정 게시글을 삭제합니다.")
