@@ -4,13 +4,16 @@ import com.example.hello_friends.board.domain.Board;
 import com.example.hello_friends.board.domain.BoardRepository;
 import com.example.hello_friends.comment.domain.Comment;
 import com.example.hello_friends.comment.domain.CommentRepository;
+import com.example.hello_friends.report.application.reportEnum.ReportStatus;
 import com.example.hello_friends.report.application.reportEnum.ReportType;
 import com.example.hello_friends.report.application.response.ReportResponse;
 import com.example.hello_friends.report.domain.Report;
 import com.example.hello_friends.report.domain.ReportRepository;
+import com.example.hello_friends.user.application.service.BlackUserService;
 import com.example.hello_friends.user.domain.User;
 import com.example.hello_friends.user.domain.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,6 +26,7 @@ public class ReportService {
     private final CommentRepository commentRepository;
     private final BoardRepository boardRepository;
     private final UserRepository userRepository;
+    private final BlackUserService blackUserService;
 
     @Transactional
     public void createReport(Long reporterId, ReportType reportType, Long contentId, String reason) {
@@ -74,5 +78,33 @@ public class ReportService {
         return reportList.stream()
                 .map(ReportResponse::from)
                 .toList();
+    }
+
+    @Transactional
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    public ReportResponse processReport(Long reportId, boolean isAccepted, String adminMemo) {
+        Report report = reportRepository.findById(reportId)
+                .orElseThrow(() -> new IllegalArgumentException("처리할 신고를 찾을 수 없습니다."));
+
+        // 중복 처리 방지
+        if (report.getStatus() != ReportStatus.PENDING) {
+            throw new IllegalStateException("이미 처리된 신고입니다.");
+        }
+
+        if (isAccepted) {
+            // 신고를 승인
+            report.process(ReportStatus.ACCEPTED, adminMemo);
+
+            // 신고당한 사용자에게 경고를 1회 추가
+            Long reportedUserId = report.getReportedUser().getId();
+            String warningReason = "신고 접수됨: [" + report.getReportType() + "] " + report.getReason();
+            blackUserService.addWarningAndBlacklistIfNeeded(reportedUserId, warningReason, adminMemo);
+
+        } else {
+            // 신고를 반려
+            report.process(ReportStatus.REJECTED, adminMemo);
+        }
+
+        return ReportResponse.from(report);
     }
 }
