@@ -71,8 +71,8 @@ public class BoardController {
 
     @Operation(summary = "게시글 삭제", description = "게시글 ID로 특정 게시글을 삭제합니다.")
     @DeleteMapping("/api/user/board/{boardId}")
-    public Resp<String> deleteBoard(@PathVariable Long boardId) {
-        boardService.deleteBoard(boardId);
+    public Resp<String> deleteBoard(@PathVariable Long boardId, @Auth JwtPrincipalDto jwtPrincipalDto) {
+        boardService.deleteBoard(boardId, jwtPrincipalDto.getId());
         return Resp.ok("게시글 삭제 성공");
     }
 

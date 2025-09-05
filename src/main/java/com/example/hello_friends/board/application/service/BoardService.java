@@ -6,6 +6,7 @@ import com.example.hello_friends.board.domain.*;
 import com.example.hello_friends.common.entity.EntityState;
 import com.example.hello_friends.user.domain.User;
 import com.example.hello_friends.user.domain.UserRepository;
+import com.example.hello_friends.user.domain.UserRole;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -102,8 +103,28 @@ public class BoardService {
 
     // 게시글 삭제
     @Transactional
-    public void deleteBoard(Long id){
-        boardRepository.deleteById(id);
+    public void deleteBoard(Long boardId, Long currentUserId) {
+        Board board = boardRepository.findById(boardId)
+                .orElseThrow(() -> new IllegalArgumentException("해당 게시글이 존재하지 않습니다. ID: " + boardId));
+
+        User currentUser = userRepository.findById(currentUserId)
+                .orElseThrow(() -> new IllegalArgumentException("사용자 정보를 찾을 수 없습니다. ID: " + currentUserId));
+
+        // 본인 글인지 확인
+        boolean isAuthor = board.getUser().getId().equals(currentUserId);
+        // 관리자인지 확인
+        boolean isAdmin = currentUser.getUserRole() == UserRole.ADMIN;
+
+        // 작성자도 아니고, 관리자도 아니라면 권한 없음 예외를 발생시킵니다.
+        if (!isAuthor && !isAdmin) {
+            try {
+                throw new AccessDeniedException("게시글을 삭제할 권한이 없습니다.");
+            } catch (AccessDeniedException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        boardRepository.delete(board);
     }
 
     // 게시글 좋아요
