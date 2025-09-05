@@ -4,6 +4,7 @@ import com.example.hello_friends.board.domain.Board;
 import com.example.hello_friends.board.domain.BoardLike;
 import com.example.hello_friends.common.entity.EntityState;
 import com.example.hello_friends.common.entity.LogEntity;
+import com.example.hello_friends.report.domain.Report;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -56,6 +57,16 @@ public class User extends LogEntity {
     @JsonManagedReference
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<BoardLike> likes = new ArrayList<>();
+
+    // 내가 한 신고 목록
+    @JsonManagedReference("reporter-reports")
+    @OneToMany(mappedBy = "reporter", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Report> filedReports = new ArrayList<>();
+
+    // 내가 받은 신고 목록
+    @JsonManagedReference("reported-reports")
+    @OneToMany(mappedBy = "reportedUser", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Report> receivedReports = new ArrayList<>();
 
 
     public User(String name, String nickname, String phone, String email, String address, Long authId) {
