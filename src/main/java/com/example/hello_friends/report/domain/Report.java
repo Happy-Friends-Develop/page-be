@@ -45,6 +45,9 @@ public class Report extends LogEntity {
     @Column(nullable = false)
     private ReportStatus status;
 
+    @Column(name = "admin_memo", length = 1000)
+    private String adminMemo;
+
     public Report(User reporter, User reportedUser, ReportType reportType, Long contentId, String reason) {
         this.reporter = reporter;
         this.reportedUser = reportedUser;
@@ -52,5 +55,10 @@ public class Report extends LogEntity {
         this.contentId = contentId;
         this.reason = reason;
         this.status = ReportStatus.PENDING;
+    }
+
+    public void process(ReportStatus newStatus, String adminMemo) {
+        this.status = newStatus;
+        this.adminMemo = adminMemo;
     }
 }
