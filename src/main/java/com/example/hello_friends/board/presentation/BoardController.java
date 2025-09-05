@@ -8,9 +8,11 @@ import com.example.hello_friends.security.annotation.Auth;
 import com.example.hello_friends.security.filter.JwtPrincipalDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -19,11 +21,12 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
+@Tag(name = "게시글")
 public class BoardController {
     private final BoardService boardService;
 
     @Operation(summary = "게시판 추가", description = "게시판을 추가합니다. 파일 업로드도 가능합니다.")
-    @PostMapping("/api/user/board")
+    @PostMapping(value = "/api/user/board", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public Board createBoard(
             @RequestPart(value = "request") BoardRequest boardRequest,
             @RequestPart(value = "files", required = false) List<MultipartFile> files) {
