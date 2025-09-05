@@ -41,7 +41,7 @@ public class SecurityConfigProd {
                 .csrf(csrfConfig->csrfConfig.disable())
                 .addFilterBefore(jwtFilterProd, UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests(auth-> auth
-                        .requestMatchers("/api/auth/**","/swagger-ui/**","/v3/api-docs/**","/api/resources/**").permitAll()
+                        .requestMatchers("/api/auth/**","/swagger-ui/**","/v3/api-docs/**","/api/user/register").permitAll()
                         .requestMatchers("/api/admin/**").hasAnyRole(Role.ADMIN.name())
                         .requestMatchers("/api/user/**").hasAnyRole(Role.ADMIN.name(),Role.SELLER.name(),Role.CUSTOMER.name())
                         .requestMatchers("/api/**").authenticated());
