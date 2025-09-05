@@ -79,7 +79,11 @@ public class UserController {
             @PathVariable Long userId,
             @RequestBody WarnUserRequest request
     ) {
-        blackUserService.addWarningAndBlacklistIfNeeded(userId, request.reason());
+        blackUserService.addWarningAndBlacklistIfNeeded(
+                userId,
+                request.reason(), // 첫 번째: 경고 사유 (reason)
+                request.reason()  // 두 번째: 관리자 메모 (adminMemo)
+        );
         return Resp.ok("경고가 정상적으로 처리되었습니다");
     }
 }

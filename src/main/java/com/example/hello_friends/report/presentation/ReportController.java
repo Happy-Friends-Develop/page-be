@@ -1,6 +1,7 @@
 package com.example.hello_friends.report.presentation;
 
 import com.example.hello_friends.common.response.Resp;
+import com.example.hello_friends.report.application.request.ReportProcessRequest;
 import com.example.hello_friends.report.application.request.ReportRequest;
 import com.example.hello_friends.report.application.response.ReportResponse;
 import com.example.hello_friends.report.application.service.ReportService;
@@ -42,5 +43,21 @@ public class ReportController {
     @GetMapping("/api/admin/reports")
     public Resp<List<ReportResponse>> getReportList(){
         return Resp.ok(reportService.getReportList());
+    }
+
+    @Operation(summary = "관리자 신고 처리", description = "관리자가 신고를 승인 또는 반려 처리합니다.")
+    @PatchMapping("/api/admin/reports/{reportId}")
+    public Resp<ReportResponse> processReport(
+            @PathVariable Long reportId,
+            @RequestBody ReportProcessRequest reportProcessRequest,
+            @Auth JwtPrincipalDto jwtPrincipalDto // ADMIN 권한 검증
+    ) {
+        ReportResponse response = reportService.processReport(
+                reportId,
+                reportProcessRequest.isAccepted(),
+                reportProcessRequest.getAdminMemo()
+        );
+
+        return Resp.ok(response);
     }
 }
