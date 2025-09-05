@@ -39,7 +39,7 @@ public class BlackUserService {
     // 사용자에게 경고를 1회 추가하고, 경고 횟수가 3회 이상이면 블랙리스트로 처리하는 메소드
     @Transactional
     @PreAuthorize("hasRole('ROLE_ADMIN')")
-    public void addWarningAndBlacklistIfNeeded(Long userId, String reason) {
+    public void addWarningAndBlacklistIfNeeded(Long userId, String reason, String adminMemo) {
         User user = userRepository.findByIdAndState(userId, EntityState.ACTIVE)
                 .orElseThrow(() -> new IllegalArgumentException("경고를 줄 사용자를 찾을 수 없음: id=" + userId));
 
@@ -51,6 +51,9 @@ public class BlackUserService {
             log.info("첫 경고 발생: userId={}, reason={}", userId, reason);
             // 첫 경고 시에는 제재 종료일이 의미 없으므로 임의의 값 삽입
             BlackUser newWarning = new BlackUser(user, reason, LocalDateTime.now().plusYears(1));
+            if (adminMemo != null && !adminMemo.isBlank()) {
+                newWarning.addAdminMemo(adminMemo);
+            }
             blackUserRepository.save(newWarning);
         } else {
             // 이미 경고 기록이 있는 경우 경고 횟수를 1 증가
