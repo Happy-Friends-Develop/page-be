@@ -10,4 +10,5 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByAuthId(Long authId);
     Optional<User> findByIdAndState(Long id, EntityState state);
     List<User> findAllByState(EntityState state);
+    List<User> findAllByRole(UserRole role);
 }
