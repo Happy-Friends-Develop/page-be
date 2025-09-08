@@ -7,6 +7,8 @@ import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -34,20 +36,29 @@ public class Event extends LogEntity {
     @JoinColumn(name = "user_id")
     private User author; // 작성자
 
-    // cascade, orphanRemoval: 이벤트가 삭제되면 참가자 명단도 함께 삭제
+    @Column(nullable = false)
+    private LocalDateTime startDate; // 이벤트 시작일
+
+    @Column(nullable = false)
+    private LocalDateTime endDate;   // 이벤트 종료일
+
     @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<EventParticipant> participants = new ArrayList<>();
 
 
-    public Event(String title, String content, EventType eventType, User author) {
+    public Event(String title, String content, EventType eventType, User author, LocalDateTime startDate, LocalDateTime endDate) {
         this.title = title;
         this.content = content;
         this.eventType = eventType;
         this.author = author;
+        this.startDate = startDate;
+        this.endDate = endDate;
     }
 
-    public void update(String title, String content){
+    public void update(String title, String content, LocalDateTime startDate, LocalDateTime endDate){
         this.title = title;
         this.content = content;
+        this.startDate = startDate;
+        this.endDate = endDate;
     }
 }

@@ -14,6 +14,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -31,7 +32,7 @@ public class EventService {
         User author = userRepository.findById(authorId)
                 .orElseThrow(() -> new IllegalArgumentException("작성자를 찾을 수 없습니다."));
 
-        Event event = new Event(request.getTitle(), request.getContent(), request.getEventType(), author);
+        Event event = new Event(request.getTitle(), request.getContent(), request.getEventType(), author, request.getStartDate(), request.getEndDate());
 
         Event savedEvent = eventRepository.save(event);
 
@@ -43,7 +44,7 @@ public class EventService {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 이벤트를 찾을 수 없습니다."));
 
-        event.update(request.getTitle(), request.getTitle());
+        event.update(request.getTitle(), request.getTitle(), request.getStartDate(), request.getEndDate());
 
         return EventResponse.from(event);
     }
@@ -76,23 +77,25 @@ public class EventService {
     // 사용자가 특정 이벤트에 참가 신청을 합니다.
     @Transactional
     public void joinEvent(Long eventId, Long userId) {
-        // 사용자 ID와 이벤트 ID로 각각의 엔티티를 찾습니다.
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new IllegalArgumentException("이벤트를 찾을 수 없습니다."));
 
-        // 공지사항(NOTICE) 타입의 게시물에는 참여할 수 없으므로 예외를 발생
         if (event.getEventType() == EventType.NOTICE) {
             throw new IllegalArgumentException("공지사항에는 참여할 수 없습니다.");
         }
 
-        // 이미 해당 이벤트에 참여했는지 중복 확인
+        LocalDateTime now = LocalDateTime.now();
+        // 현재 시간이 이벤트 시작 전이거나 종료 후인 경우 예외 발생
+        if (now.isBefore(event.getStartDate()) || now.isAfter(event.getEndDate())) {
+            throw new IllegalStateException("이벤트 참여 기간이 아닙니다.");
+        }
+
         if (eventParticipantRepository.existsByUserAndEvent(user, event)) {
             throw new IllegalStateException("이미 참여한 이벤트입니다.");
         }
 
-        // 참가 정보를 담는 EventParticipant 엔티티를 생성하고 저장
         EventParticipant participant = new EventParticipant(user, event);
         eventParticipantRepository.save(participant);
     }

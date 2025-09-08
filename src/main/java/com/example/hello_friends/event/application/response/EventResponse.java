@@ -16,9 +16,11 @@ public class EventResponse {
     private final String authorNickname;
     private final int participantCount;
     private final LocalDateTime createdAt;
+    private final LocalDateTime startDate;
+    private final LocalDateTime endDate;
 
     @Builder
-    private EventResponse(Long id, String title, String content, EventType eventType, String authorNickname, int participantCount, LocalDateTime createdAt) {
+    private EventResponse(Long id, String title, String content, EventType eventType, String authorNickname, int participantCount, LocalDateTime createdAt, LocalDateTime startDate, LocalDateTime endDate) {
         this.id = id;
         this.title = title;
         this.content = content;
@@ -26,6 +28,8 @@ public class EventResponse {
         this.authorNickname = authorNickname;
         this.participantCount = participantCount;
         this.createdAt = createdAt;
+        this.startDate = startDate;
+        this.endDate = endDate;
     }
 
     public static EventResponse from(Event event) {
@@ -37,6 +41,8 @@ public class EventResponse {
                 .authorNickname(event.getAuthor().getNickname())
                 .participantCount(event.getParticipants().size())
                 .createdAt(event.getCreatedAt())
+                .startDate(event.getStartDate())
+                .endDate(event.getEndDate())
                 .build();
     }
 }
