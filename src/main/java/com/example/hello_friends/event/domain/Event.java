@@ -1,19 +1,19 @@
 package com.example.hello_friends.event.domain;
 
+import com.example.hello_friends.common.entity.LogEntity;
 import com.example.hello_friends.event.application.EventType;
 import com.example.hello_friends.user.domain.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Event {
+public class Event extends LogEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -38,14 +38,12 @@ public class Event {
     @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<EventParticipant> participants = new ArrayList<>();
 
-    private LocalDateTime createdAt;
 
     public Event(String title, String content, EventType eventType, User author) {
         this.title = title;
         this.content = content;
         this.eventType = eventType;
         this.author = author;
-        this.createdAt = LocalDateTime.now();
     }
 
     public void update(String title, String content){

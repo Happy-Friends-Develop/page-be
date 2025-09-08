@@ -1,5 +1,6 @@
 package com.example.hello_friends.notification.domain;
 
+import com.example.hello_friends.common.entity.LogEntity;
 import com.example.hello_friends.user.domain.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -7,12 +8,11 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
 
 @Getter
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Notification {
+public class Notification extends LogEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -31,7 +31,6 @@ public class Notification {
     @JoinColumn(name = "user_id")
     private User receiver;
 
-    private LocalDateTime createdAt;
 
     @Builder
     public Notification(User receiver, String content, String url, boolean isRead) {
@@ -39,6 +38,5 @@ public class Notification {
         this.content = content;
         this.url = url;
         this.isRead = isRead;
-        this.createdAt = LocalDateTime.now();
     }
 }

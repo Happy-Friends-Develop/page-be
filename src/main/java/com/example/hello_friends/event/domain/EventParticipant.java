@@ -1,5 +1,6 @@
 package com.example.hello_friends.event.domain;
 
+import com.example.hello_friends.common.entity.LogEntity;
 import com.example.hello_friends.user.domain.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -11,7 +12,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 // 한 사용자가 같은 이벤트에 중복으로 참여하는 것을 방지
 @Table(uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "event_id"}))
-public class EventParticipant {
+public class EventParticipant extends LogEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
