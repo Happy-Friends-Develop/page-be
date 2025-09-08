@@ -8,6 +8,7 @@ import com.example.hello_friends.common.response.Resp;
 import com.example.hello_friends.security.annotation.Auth;
 import com.example.hello_friends.security.filter.JwtPrincipalDto;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -28,7 +29,7 @@ public class CommentController {
     public ResponseEntity<CommentResponse> createComment(
             @PathVariable Long boardId,
             @RequestBody CommentRequest commentRequest,
-            @Auth JwtPrincipalDto jwtPrincipalDto) {
+            @Parameter(hidden = true) @Auth JwtPrincipalDto jwtPrincipalDto) {
 
         Comment comment = commentService.createComment(boardId, jwtPrincipalDto.getId(), commentRequest.getParentId(), commentRequest.getContent());
 
@@ -49,7 +50,7 @@ public class CommentController {
     public Resp<CommentResponse> updateComment(
             @PathVariable Long commentId,
             @RequestBody CommentRequest commentRequest,
-            @Auth JwtPrincipalDto jwtPrincipalDto) {
+            @Parameter(hidden = true) @Auth JwtPrincipalDto jwtPrincipalDto) {
 
         Comment updatedComment = commentService.updateComment(commentId, jwtPrincipalDto.getId(), commentRequest.getContent());
 
@@ -59,7 +60,7 @@ public class CommentController {
     // 댓글 삭제
     @Operation(summary = "댓글을 삭제합니다.", description = "댓글을 작성한 사람 및 관리자만 삭제가 가능합니다.")
     @DeleteMapping("/api/user/comments/{commentId}")
-    public Resp<String> deleteComment(@PathVariable Long commentId, @Auth JwtPrincipalDto jwtPrincipalDto) {
+    public Resp<String> deleteComment(@PathVariable Long commentId, @Parameter(hidden = true) @Auth JwtPrincipalDto jwtPrincipalDto) {
         commentService.deleteComment(commentId, jwtPrincipalDto.getId());
         return Resp.ok("댓글 삭제 성공");
     }

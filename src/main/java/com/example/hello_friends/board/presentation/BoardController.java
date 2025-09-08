@@ -31,7 +31,7 @@ public class BoardController {
             @Parameter(description = "게시글 제목") @RequestParam String title,
             @Parameter(description = "게시글 내용") @RequestParam String content,
             @Parameter(description = "첨부 파일들") @RequestPart(value = "files", required = false) List<MultipartFile> files,
-            @Auth JwtPrincipalDto jwtPrincipalDto
+            @Parameter(hidden = true) @Auth JwtPrincipalDto jwtPrincipalDto
     ) {
         BoardRequest boardRequest = BoardRequest.builder()
                 .title(title)
@@ -63,13 +63,13 @@ public class BoardController {
     public BoardResponse updateBoard(
             @PathVariable Long boardId,
             @RequestBody BoardRequest boardRequest,
-            @Auth JwtPrincipalDto jwtPrincipalDto) {
+            @Parameter(hidden = true) @Auth JwtPrincipalDto jwtPrincipalDto) {
         return boardService.updateBoard(boardId, boardRequest, jwtPrincipalDto.getId());
     }
 
     @Operation(summary = "게시글 삭제", description = "게시글 ID로 특정 게시글을 삭제합니다.")
     @DeleteMapping("/api/user/board/{boardId}")
-    public Resp<String> deleteBoard(@PathVariable Long boardId, @Auth JwtPrincipalDto jwtPrincipalDto) {
+    public Resp<String> deleteBoard(@PathVariable Long boardId, @Parameter(hidden = true) @Auth JwtPrincipalDto jwtPrincipalDto) {
         boardService.deleteBoard(boardId, jwtPrincipalDto.getId());
         return Resp.ok("게시글 삭제 성공");
     }

@@ -8,6 +8,7 @@ import com.example.hello_friends.report.application.service.ReportService;
 import com.example.hello_friends.security.annotation.Auth;
 import com.example.hello_friends.security.filter.JwtPrincipalDto;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -22,7 +23,7 @@ public class ReportController {
 
     @Operation(summary = "컨텐츠 신고", description = "게시글 또는 댓글을 신고합니다.")
     @PostMapping("/api/user/report")
-    public Resp<String> createReport(@RequestBody ReportRequest reportRequest, @Auth JwtPrincipalDto jwtPrincipalDto) {
+    public Resp<String> createReport(@RequestBody ReportRequest reportRequest, @Parameter(hidden = true) @Auth JwtPrincipalDto jwtPrincipalDto) {
         reportService.createReport(
                 jwtPrincipalDto.getId(),
                 reportRequest.getReportType(),
@@ -50,7 +51,7 @@ public class ReportController {
     public Resp<ReportResponse> processReport(
             @PathVariable Long reportId,
             @RequestBody ReportProcessRequest reportProcessRequest,
-            @Auth JwtPrincipalDto jwtPrincipalDto // ADMIN 권한 검증
+            @Parameter(hidden = true) @Auth JwtPrincipalDto jwtPrincipalDto // ADMIN 권한 검증
     ) {
         ReportResponse response = reportService.processReport(
                 reportId,
