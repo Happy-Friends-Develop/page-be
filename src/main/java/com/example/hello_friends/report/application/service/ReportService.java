@@ -47,7 +47,7 @@ public class ReportService {
         reportRepository.save(report);
 
         // 관리자 계정을 조회
-        List<User> admins = userRepository.findAllByRole(UserRole.ADMIN);
+        List<User> admins = userRepository.findAllByUserRole(UserRole.ADMIN);
 
         // 각 관리자에게 알림 전송
         for (User admin : admins) {
