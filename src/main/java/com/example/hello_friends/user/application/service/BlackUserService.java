@@ -1,6 +1,7 @@
 package com.example.hello_friends.user.application.service;
 
 import com.example.hello_friends.common.entity.EntityState;
+import com.example.hello_friends.notification.application.service.NotificationService;
 import com.example.hello_friends.user.domain.*; // User, UserRepository 등 임포트
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -16,7 +17,8 @@ import java.time.LocalDateTime;
 public class BlackUserService {
 
     private final BlackUserRepository blackUserRepository;
-    private final UserRepository userRepository; // User 정보를 가져오기 위해 추가
+    private final UserRepository userRepository;
+    private final NotificationService notificationService;
 
     // 경고 횟수 기준 (3회)
     private static final int WARNING_THRESHOLD = 3;
@@ -43,28 +45,44 @@ public class BlackUserService {
         User user = userRepository.findByIdAndState(userId, EntityState.ACTIVE)
                 .orElseThrow(() -> new IllegalArgumentException("경고를 줄 사용자를 찾을 수 없음: id=" + userId));
 
-        // 해당 사용자가 이미 경고를 받은 기록이 있는지 확인
         BlackUser blackUser = blackUserRepository.findByUserAndState(user, EntityState.ACTIVE)
-                .orElse(null); // 없으면 null
+                .orElse(null);
+
+        // 이동할 페이지 URL (예: 마이페이지 내 제재 내역)
+        String notificationUrl = "/my-page/sanctions";
 
         if (blackUser == null) {
             log.info("첫 경고 발생: userId={}, reason={}", userId, reason);
-            // 첫 경고 시에는 제재 종료일이 의미 없으므로 임의의 값 삽입
             BlackUser newWarning = new BlackUser(user, reason, LocalDateTime.now().plusYears(1));
             if (adminMemo != null && !adminMemo.isBlank()) {
                 newWarning.addAdminMemo(adminMemo);
             }
             blackUserRepository.save(newWarning);
+
+            String notificationContent = "서비스 정책 위반으로 경고 1회가 부여되었습니다. 3회 누적 시 이용이 제한될 수 있습니다.";
+            notificationService.send(user, notificationContent, notificationUrl);
+
         } else {
-            // 이미 경고 기록이 있는 경우 경고 횟수를 1 증가
             log.info("추가 경고 발생: userId={}, 현재 경고 횟수={}", userId, blackUser.getWarningCount());
             blackUser.updateWarningCount();
             blackUser.addAdminMemo("추가 경고: " + reason);
 
-            // 3회 넘는경우
+            String warningContent = String.format(
+                    "서비스 정책 위반으로 경고가 추가 부여되었습니다. (현재 경고: %d회)",
+                    blackUser.getWarningCount()
+            );
+            notificationService.send(user, warningContent, notificationUrl);
+
             if (blackUser.getWarningCount() >= WARNING_THRESHOLD) {
                 log.warn("경고 3회 누적으로 블랙리스트 처리: userId={}", userId);
                 applyBlacklist(user, blackUser);
+
+                String blacklistContent = String.format(
+                        "경고 %d회 누적으로 계정이 블랙리스트 처리되어 %d일간 서비스 이용이 제한됩니다.",
+                        WARNING_THRESHOLD,
+                        BLACKLIST_DURATION_DAYS
+                );
+                notificationService.send(user, blacklistContent, notificationUrl);
             }
         }
     }

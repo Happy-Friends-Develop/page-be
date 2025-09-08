@@ -4,6 +4,7 @@ import com.example.hello_friends.board.application.request.BoardRequest;
 import com.example.hello_friends.board.application.response.BoardResponse;
 import com.example.hello_friends.board.domain.*;
 import com.example.hello_friends.common.entity.EntityState;
+import com.example.hello_friends.notification.application.service.NotificationService;
 import com.example.hello_friends.user.domain.User;
 import com.example.hello_friends.user.domain.UserRepository;
 import com.example.hello_friends.user.domain.UserRole;
@@ -29,6 +30,7 @@ public class BoardService {
     private final VideoService videoService;
     private final UserRepository userRepository;
     private final BoardLikeRepository boardLikeRepository;
+    private final NotificationService notificationService;
 
     // 보드 생성
     @Transactional
@@ -136,15 +138,24 @@ public class BoardService {
         User user = userRepository.findByIdAndState(userId, EntityState.ACTIVE)
                 .orElseThrow(() -> new IllegalArgumentException("ID " + userId + "에 해당하는 사용자를 찾을 수 없음"));
 
-        // 이미 좋아요를 눌렀는지 확인
         Optional<BoardLike> boardLike = boardLikeRepository.findByUserAndBoard(user, board);
 
         if (boardLike.isPresent()) {
-            // 이미 눌렀다면 좋아요 취소
+            // 이미 눌렀다면 좋아요 취소 (알림 X)
             boardLikeRepository.delete(boardLike.get());
         } else {
             // 누르지 않았다면 좋아요 추가
             boardLikeRepository.save(new BoardLike(user, board));
+
+            // 게시글 작성자를 가져옵니다.
+            User boardAuthor = board.getUser();
+
+            // 자신의 게시글에 좋아요를 누른 경우가 아닐 때만 알림을 보냅니다.
+            if (!boardAuthor.getId().equals(userId)) {
+                String notificationContent = user.getNickname() + "님이 회원님의 게시글을 좋아합니다.";
+                String notificationUrl = "/boards/" + boardId;
+                notificationService.send(boardAuthor, notificationContent, notificationUrl);
+            }
         }
     }
 

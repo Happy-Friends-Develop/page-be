@@ -4,14 +4,17 @@ import com.example.hello_friends.board.domain.Board;
 import com.example.hello_friends.board.domain.BoardRepository;
 import com.example.hello_friends.comment.domain.Comment;
 import com.example.hello_friends.comment.domain.CommentRepository;
+import com.example.hello_friends.notification.application.service.NotificationService;
 import com.example.hello_friends.report.application.reportEnum.ReportStatus;
 import com.example.hello_friends.report.application.reportEnum.ReportType;
 import com.example.hello_friends.report.application.response.ReportResponse;
 import com.example.hello_friends.report.domain.Report;
 import com.example.hello_friends.report.domain.ReportRepository;
+import com.example.hello_friends.security.userdetail.Role;
 import com.example.hello_friends.user.application.service.BlackUserService;
 import com.example.hello_friends.user.domain.User;
 import com.example.hello_friends.user.domain.UserRepository;
+import com.example.hello_friends.user.domain.UserRole;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
@@ -27,24 +30,32 @@ public class ReportService {
     private final BoardRepository boardRepository;
     private final UserRepository userRepository;
     private final BlackUserService blackUserService;
+    private final NotificationService notificationService;
 
     @Transactional
     public void createReport(Long reporterId, ReportType reportType, Long contentId, String reason) {
         // 신고자 정보
         User reporter = userRepository.findById(reporterId)
                 .orElseThrow(() -> new IllegalArgumentException("신고자를 찾을 수 없습니다."));
-
-        // 피신고자 정보
         User reportedUser = findContentAuthor(reportType, contentId);
 
-        // 중복 신고인지 확인
         if (reportRepository.existsByReporterAndReportTypeAndContentId(reporter, reportType, contentId)) {
             throw new IllegalStateException("이미 신고한 컨텐츠입니다.");
         }
 
-        // 신고 완료
         Report report = new Report(reporter, reportedUser, reportType, contentId, reason);
         reportRepository.save(report);
+
+        // 관리자 계정을 조회
+        List<User> admins = userRepository.findAllByRole(UserRole.ADMIN);
+
+        // 각 관리자에게 알림 전송
+        for (User admin : admins) {
+            String notificationContent = "새로운 신고가 접수되었습니다. 확인이 필요합니다.";
+            // 알림 클릭 시 이동할 URL (관리자 신고 상세 페이지)
+            String notificationUrl = "/admin/reports/" + report.getId();
+            notificationService.send(admin, notificationContent, notificationUrl);
+        }
     }
 
     // 신고된 컨텐츠 찾는 메서드

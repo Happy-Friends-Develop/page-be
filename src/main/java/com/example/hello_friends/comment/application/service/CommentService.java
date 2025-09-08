@@ -5,6 +5,7 @@ import com.example.hello_friends.board.domain.BoardRepository;
 import com.example.hello_friends.comment.application.response.CommentResponse;
 import com.example.hello_friends.comment.domain.Comment;
 import com.example.hello_friends.comment.domain.CommentRepository;
+import com.example.hello_friends.notification.application.service.NotificationService;
 import com.example.hello_friends.user.domain.User;
 import com.example.hello_friends.user.domain.UserRepository;
 import com.example.hello_friends.user.domain.UserRole;
@@ -26,6 +27,7 @@ public class CommentService {
     private final CommentRepository commentRepository;
     private final BoardRepository boardRepository;
     private final UserRepository userRepository;
+    private final NotificationService notificationService;
 
     // 댓글 및 대댓글 생성
     // parentId가 null이면 일반 댓글, 값이 있으면 대댓글로 생성
@@ -37,14 +39,37 @@ public class CommentService {
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
 
         Comment parent = null;
-        // 대댓글인 경우
         if (parentId != null) {
             parent = commentRepository.findById(parentId)
                     .orElseThrow(() -> new IllegalArgumentException("부모 댓글을 찾을 수 없습니다."));
         }
 
         Comment comment = new Comment(content, board, user, parent);
-        return commentRepository.save(comment);
+        commentRepository.save(comment); // 댓글 저장
+
+
+        // 대댓글인 경우 (부모 댓글 작성자에게 알림)
+        if (parent != null) {
+            User parentAuthor = parent.getUser();
+            // 자신의 댓글에 대댓글을 단 경우가 아닐 때만 알림 전송
+            if (!parentAuthor.getId().equals(userId)) {
+                String notificationContent = user.getNickname() + "님이 회원님의 댓글에 답글을 남겼습니다.";
+                String notificationUrl = "/boards/" + boardId;
+                notificationService.send(parentAuthor, notificationContent, notificationUrl);
+            }
+        }
+        // 일반 댓글인 경우 (게시글 작성자에게 알림)
+        else {
+            User boardAuthor = board.getUser();
+            // 자신의 게시글에 댓글을 단 경우가 아닐 때만 알림 전송
+            if (!boardAuthor.getId().equals(userId)) {
+                String notificationContent = user.getNickname() + "님이 회원님의 게시글에 댓글을 남겼습니다.";
+                String notificationUrl = "/boards/" + boardId;
+                notificationService.send(boardAuthor, notificationContent, notificationUrl);
+            }
+        }
+
+        return comment;
     }
 
     // 댓글 수정
