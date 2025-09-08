@@ -1,12 +1,11 @@
 package com.example.hello_friends.notification.domain;
 
-import com.example.hello_friends.user.domain.User; // import 변경
+import com.example.hello_friends.user.domain.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.springframework.data.annotation.Id;
 
 import java.time.LocalDateTime;
 
