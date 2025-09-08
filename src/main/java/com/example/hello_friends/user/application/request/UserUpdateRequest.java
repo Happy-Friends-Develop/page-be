@@ -25,4 +25,8 @@ public class UserUpdateRequest {
     @NotBlank
     @Schema(description = "주소", example = "인천 남동구 백범로 124번길 43")
     private String address;
+
+    @NotBlank
+    @Schema(description = "생년월일", example = "2003-04-14")
+    private String birth;
 }

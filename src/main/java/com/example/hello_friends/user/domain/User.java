@@ -39,6 +39,9 @@ public class User extends LogEntity {
     @Column(name="user_address", nullable = false)
     private String address;
 
+    @Column(name="user_birth", nullable = false)
+    private String birth;
+
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private UserRole userRole;
@@ -69,7 +72,7 @@ public class User extends LogEntity {
     private List<Report> receivedReports = new ArrayList<>();
 
 
-    public User(String name, String nickname, String phone, String email, String address, Long authId) {
+    public User(String name, String nickname, String phone, String email, String address, Long authId, String birth) {
         super();
         this.name = name;
         this.nickname = nickname;
@@ -79,14 +82,16 @@ public class User extends LogEntity {
         this.userRole = UserRole.CUSTOMER;
         this.state = EntityState.ACTIVE;
         this.authId = authId;
+        this.birth = birth;
     }
 
-    public void update(String name, String nickname, String phone, String email, String address){
+    public void update(String name, String nickname, String phone, String email, String address, String birth){
         this.name = name;
         this.nickname = nickname;
         this.phone = phone;
         this.email = email;
         this.address = address;
+        this.birth = birth;
     }
 
     public void delete(){

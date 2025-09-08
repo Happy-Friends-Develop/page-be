@@ -42,7 +42,7 @@ public class UserService {
 
         Auth auth = authService.registAuth(AuthBody.of(userRequest.getId(), userRequest.getPassword()));
         User user = new User(userRequest.getName(), userRequest.getNickname(), userRequest.getPhone(),
-                userRequest.getEmail(), userRequest.getAddress(), auth.getId());
+                userRequest.getEmail(), userRequest.getAddress(), auth.getId(), userRequest.getBirth());
         User savedUser = userRepository.save(user);
 
         return UserResponse.from(savedUser);
@@ -73,7 +73,7 @@ public class UserService {
         User user = userRepository.findByIdAndState(id, EntityState.ACTIVE)
                 .orElseThrow(() -> new IllegalArgumentException("ID " + id + "에 해당하는 사용자를 찾을 수 없어 수정 불가"));
 
-        user.update(userUpdateRequest.getName(), userUpdateRequest.getNickname(), userUpdateRequest.getPhone(), userUpdateRequest.getEmail(), userUpdateRequest.getAddress());
+        user.update(userUpdateRequest.getName(), userUpdateRequest.getNickname(), userUpdateRequest.getPhone(), userUpdateRequest.getEmail(), userUpdateRequest.getAddress(), userUpdateRequest.getBirth());
 
         // 수정된 정보를 담은 엔티티를 DTO로 변환하여 반환
         return UserResponse.from(user);
