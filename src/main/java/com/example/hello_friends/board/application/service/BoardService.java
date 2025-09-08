@@ -104,6 +104,7 @@ public class BoardService {
     }
 
     // 게시글 삭제
+    // 게시글 삭제
     @Transactional
     public void deleteBoard(Long boardId, Long currentUserId) {
         Board board = boardRepository.findById(boardId)
@@ -112,12 +113,9 @@ public class BoardService {
         User currentUser = userRepository.findById(currentUserId)
                 .orElseThrow(() -> new IllegalArgumentException("사용자 정보를 찾을 수 없습니다. ID: " + currentUserId));
 
-        // 본인 글인지 확인
         boolean isAuthor = board.getUser().getId().equals(currentUserId);
-        // 관리자인지 확인
         boolean isAdmin = currentUser.getUserRole() == UserRole.ADMIN;
 
-        // 작성자도 아니고, 관리자도 아니라면 권한 없음 예외를 발생시킵니다.
         if (!isAuthor && !isAdmin) {
             try {
                 throw new AccessDeniedException("게시글을 삭제할 권한이 없습니다.");
@@ -125,6 +123,17 @@ public class BoardService {
                 throw new RuntimeException(e);
             }
         }
+
+        // 관리자가 삭제했고, 본인 글이 아닐 경우에만 알림 전송
+        if (isAdmin && !isAuthor) {
+            User boardAuthor = board.getUser(); // 게시글 작성자
+            String notificationContent = "회원님의 게시글이 관리자에 의해 삭제되었습니다. 자세한 내용은 고객센터에 문의해주세요.";
+            // 삭제된 게시글로 이동할 수 없으므로, '마이페이지'나 '고객센터' 등의 URL로 설정합니다.
+            String notificationUrl = "/my-page/posts";
+
+            notificationService.send(boardAuthor, notificationContent, notificationUrl);
+        }
+
 
         boardRepository.delete(board);
     }

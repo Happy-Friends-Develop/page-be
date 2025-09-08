@@ -17,10 +17,10 @@ import java.util.concurrent.ConcurrentHashMap;
 @RequiredArgsConstructor
 public class NotificationService {
     private final NotificationRepository notificationRepository;
-    private final ObjectMapper objectMapper; // JSON 변환을 위해 추가
+    private final ObjectMapper objectMapper;
     private static final Map<Long, SseEmitter> emitters = new ConcurrentHashMap<>();
 
-    // 구독 로직은 변경 없음
+    // 구독 로직
     public SseEmitter subscribe(Long userId) {
         SseEmitter emitter = new SseEmitter(Long.MAX_VALUE);
         emitters.put(userId, emitter);
@@ -36,7 +36,7 @@ public class NotificationService {
         return emitter;
     }
 
-    // *** 전송 로직 수정 ***
+    // 전송 로직
     public void send(User receiver, String content, String url) {
         Notification notification = notificationRepository.save(
                 createNotification(receiver, content, url)
