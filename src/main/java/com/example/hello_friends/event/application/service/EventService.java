@@ -28,14 +28,13 @@ public class EventService {
     // 새로운 이벤트 또는 공지사항을 생성
     @Transactional
     @PreAuthorize("hasRole('ROLE_ADMIN')")
-    public EventResponse createEvent(EventCreateRequest request, Long authorId) {
+    public EventResponse createEvent(EventCreateRequest request, Long authorId, EventType eventType) {
         User author = userRepository.findById(authorId)
                 .orElseThrow(() -> new IllegalArgumentException("작성자를 찾을 수 없습니다."));
 
-        Event event = new Event(request.getTitle(), request.getContent(), request.getEventType(), author, request.getStartDate(), request.getEndDate());
+        Event event = new Event(request.getTitle(), request.getContent(), eventType, author, request.getStartDate(), request.getEndDate());
 
         Event savedEvent = eventRepository.save(event);
-
         return EventResponse.from(savedEvent);
     }
 
