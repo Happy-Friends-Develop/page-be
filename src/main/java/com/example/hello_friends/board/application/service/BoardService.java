@@ -4,6 +4,9 @@ import com.example.hello_friends.board.application.request.BoardRequest;
 import com.example.hello_friends.board.application.response.BoardResponse;
 import com.example.hello_friends.board.domain.*;
 import com.example.hello_friends.common.entity.EntityState;
+import com.example.hello_friends.common.exception.BoardNotFoundException;
+import com.example.hello_friends.common.exception.NoAuthorityException;
+import com.example.hello_friends.common.exception.UserNotFoundException;
 import com.example.hello_friends.notification.application.service.NotificationService;
 import com.example.hello_friends.user.domain.User;
 import com.example.hello_friends.user.domain.UserRepository;
@@ -17,7 +20,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.nio.file.AccessDeniedException;
 import java.util.List;
 import java.util.Optional;
 
@@ -36,7 +38,7 @@ public class BoardService {
     @Transactional
     public BoardResponse createBoard(BoardRequest request, List<MultipartFile> files, Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("ID " + userId + "에 해당하는 사용자를 찾을 수 없음"));
+                .orElseThrow(() -> new UserNotFoundException("ID " + userId + "에 해당하는 사용자를 찾을 수 없음"));
 
         Board board = new Board(request.getTitle(), request.getContent(), user, request.getBoardType());
 
@@ -67,7 +69,7 @@ public class BoardService {
     @Transactional(readOnly = true)
     public BoardResponse findBoardById(Long id) {
         Board board = boardRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("해당 게시글이 없습니다. id=" + id));
+                .orElseThrow(() -> new BoardNotFoundException("해당 게시글이 없습니다. id=" + id));
 
         return BoardResponse.from(board);
 
@@ -91,15 +93,11 @@ public class BoardService {
     @Transactional
     public BoardResponse updateBoard(Long boardId, BoardRequest boardRequest, Long currentUserId) {
         Board board = boardRepository.findById(boardId)
-                .orElseThrow(() -> new IllegalArgumentException("해당 게시글이 존재하지 않습니다. ID: " + boardId));
+                .orElseThrow(() -> new BoardNotFoundException("해당 게시글이 존재하지 않습니다. ID: " + boardId));
 
         // 게시글 작성자의 ID와 현재 요청한 사용자의 ID가 같은지 확인
         if (!board.getUser().getId().equals(currentUserId)) {
-            try {
-                throw new AccessDeniedException("게시글을 수정할 권한이 없습니다.");
-            } catch (AccessDeniedException e) {
-                throw new RuntimeException(e);
-            }
+            throw new NoAuthorityException("게시글을 수정할 권한이 없습니다.");
         }
 
         board.update(boardRequest.getTitle(), boardRequest.getContent(), boardRequest.getBoardType());
@@ -111,27 +109,22 @@ public class BoardService {
     @Transactional
     public void deleteBoard(Long boardId, Long currentUserId) {
         Board board = boardRepository.findById(boardId)
-                .orElseThrow(() -> new IllegalArgumentException("해당 게시글이 존재하지 않습니다. ID: " + boardId));
+                .orElseThrow(() -> new BoardNotFoundException("해당 게시글이 존재하지 않습니다. ID: " + boardId));
 
         User currentUser = userRepository.findById(currentUserId)
-                .orElseThrow(() -> new IllegalArgumentException("사용자 정보를 찾을 수 없습니다. ID: " + currentUserId));
+                .orElseThrow(() -> new UserNotFoundException("사용자 정보를 찾을 수 없습니다. ID: " + currentUserId));
 
         boolean isAuthor = board.getUser().getId().equals(currentUserId);
         boolean isAdmin = currentUser.getUserRole() == UserRole.ADMIN;
 
         if (!isAuthor && !isAdmin) {
-            try {
-                throw new AccessDeniedException("게시글을 삭제할 권한이 없습니다.");
-            } catch (AccessDeniedException e) {
-                throw new RuntimeException(e);
-            }
+            throw new NoAuthorityException("게시글을 삭제할 권한이 없습니다.");
         }
 
         // 관리자가 삭제했고, 본인 글이 아닐 경우에만 알림 전송
         if (isAdmin && !isAuthor) {
             User boardAuthor = board.getUser(); // 게시글 작성자
             String notificationContent = "회원님의 게시글이 관리자에 의해 삭제되었습니다. 자세한 내용은 고객센터에 문의해주세요.";
-            // 삭제된 게시글로 이동할 수 없으므로, '마이페이지'나 '고객센터' 등의 URL로 설정합니다.
             String notificationUrl = "/my-page/posts";
 
             notificationService.send(boardAuthor, notificationContent, notificationUrl);
@@ -145,10 +138,10 @@ public class BoardService {
     @Transactional
     public void toggleLike(Long boardId, Long userId){
         Board board = boardRepository.findById(boardId)
-                .orElseThrow(() -> new IllegalArgumentException("해당 게시글이 존재하지 않습니다."));
+                .orElseThrow(() -> new BoardNotFoundException("해당 게시글이 존재하지 않습니다."));
 
         User user = userRepository.findByIdAndState(userId, EntityState.ACTIVE)
-                .orElseThrow(() -> new IllegalArgumentException("ID " + userId + "에 해당하는 사용자를 찾을 수 없음"));
+                .orElseThrow(() -> new UserNotFoundException("ID " + userId + "에 해당하는 사용자를 찾을 수 없음"));
 
         Optional<BoardLike> boardLike = boardLikeRepository.findByUserAndBoard(user, board);
 
@@ -174,7 +167,8 @@ public class BoardService {
     // 조회수 상승
     @Transactional
     public void updateView(Long boardId, HttpServletRequest request, HttpServletResponse response) {
-        Board board = boardRepository.findById(boardId).orElseThrow(() -> new IllegalArgumentException("게시글을 찾을 수 없습니다."));
+        Board board = boardRepository.findById(boardId)
+                .orElseThrow(() -> new BoardNotFoundException("게시글을 찾을 수 없습니다."));
 
         Cookie oldCookie = null;
         Cookie[] cookies = request.getCookies();
