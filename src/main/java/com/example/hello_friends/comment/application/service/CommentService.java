@@ -5,6 +5,7 @@ import com.example.hello_friends.board.domain.BoardRepository;
 import com.example.hello_friends.comment.application.response.CommentResponse;
 import com.example.hello_friends.comment.domain.Comment;
 import com.example.hello_friends.comment.domain.CommentRepository;
+import com.example.hello_friends.common.exception.*;
 import com.example.hello_friends.notification.application.service.NotificationService;
 import com.example.hello_friends.user.domain.User;
 import com.example.hello_friends.user.domain.UserRepository;
@@ -34,14 +35,14 @@ public class CommentService {
     @Transactional
     public Comment createComment(Long boardId, Long userId, Long parentId, String content) {
         Board board = boardRepository.findById(boardId)
-                .orElseThrow(() -> new IllegalArgumentException("게시글을 찾을 수 없습니다."));
+                .orElseThrow(() -> new BoardNotFoundException("해당 게시글이 없습니다. ID : " + boardId));
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+                .orElseThrow(() -> new UserNotFoundException("해당하는 사용자를 찾을 수 없습니다. ID : "+ userId));
 
         Comment parent = null;
         if (parentId != null) {
             parent = commentRepository.findById(parentId)
-                    .orElseThrow(() -> new IllegalArgumentException("부모 댓글을 찾을 수 없습니다."));
+                    .orElseThrow(() -> new ParentCommentNotFoundException("해당하는 부모 댓글을 찾을 수 없습니다. ID : " + parentId));
         }
 
         Comment comment = new Comment(content, board, user, parent);
@@ -76,15 +77,11 @@ public class CommentService {
     @Transactional
     public Comment updateComment(Long commentId, Long userId, String content) {
         Comment comment = commentRepository.findById(commentId)
-                .orElseThrow(() -> new IllegalArgumentException("댓글을 찾을 수 없습니다."));
+                .orElseThrow(() -> new CommentNotFoundException("댓글을 찾을 수 없습니다. ID: "+ commentId));
 
         // 본인 댓글인지 확인
         if (!comment.getUser().getId().equals(userId)) {
-            try {
-                throw new AccessDeniedException("댓글을 수정할 권한이 없습니다.");
-            } catch (AccessDeniedException e) {
-                throw new RuntimeException(e);
-            }
+            throw new NoAuthorityException("댓글을 수정할 권한이 없습니다.");
         }
 
         comment.update(content);
@@ -95,10 +92,10 @@ public class CommentService {
     @Transactional
     public void deleteComment(Long commentId, Long userId) {
         Comment comment = commentRepository.findById(commentId)
-                .orElseThrow(() -> new IllegalArgumentException("댓글을 찾을 수 없습니다."));
+                .orElseThrow(() -> new CommentNotFoundException("댓글을 찾을 수 없습니다. ID: "+ commentId));
 
         User currentUser = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("사용자 정보를 찾을 수 없습니다."));
+                .orElseThrow(() -> new UserNotFoundException("해당하는 사용자를 찾을 수 없습니다. ID : "+ userId));
 
         // 권한을 확인
         boolean isAuthor = comment.getUser().getId().equals(userId);
@@ -106,11 +103,7 @@ public class CommentService {
 
         // 권한밖일 경우 예외처리
         if (!isAuthor && !isAdmin) {
-            try {
-                throw new AccessDeniedException("댓글을 삭제할 권한이 없습니다.");
-            } catch (AccessDeniedException e) {
-                throw new RuntimeException(e);
-            }
+            throw new NoAuthorityException("댓글을 삭제할 권한이 없습니다.");
         }
 
         if (!comment.getChildren().isEmpty()) {
