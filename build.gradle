@@ -1,0 +1,82 @@
+plugins {
+	id 'java'
+	id 'org.springframework.boot' version '3.5.5'
+	id 'io.spring.dependency-management' version '1.1.7'
+	id 'org.jetbrains.kotlin.jvm'
+}
+
+group = 'com.example'
+version = '0.0.1-SNAPSHOT'
+description = 'hello-friends'
+
+java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(21)
+	}
+}
+
+configurations {
+	compileOnly {
+		extendsFrom annotationProcessor
+	}
+}
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	// Spring Boot Starters
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+	implementation 'org.springframework.boot:spring-boot-starter-security'
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'org.springframework.boot:spring-boot-starter-web-services'
+	implementation 'org.springframework.boot:spring-boot-starter-websocket'
+	implementation 'org.springframework.boot:spring-boot-starter-validation'
+
+	// Spring Session
+	implementation 'org.springframework.session:spring-session-jdbc'
+
+	// Documentation & MyBatis
+	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.8'
+	implementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter:3.0.4'
+
+	// Utilities
+	implementation 'org.bytedeco:javacv-platform:1.5.9'
+	implementation 'com.aventrix.jnanoid:jnanoid:2.0.0'
+
+	// JWT
+	implementation 'io.jsonwebtoken:jjwt-api:0.12.5'
+	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.5'
+	runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.5'
+
+	// Lombok
+	compileOnly 'org.projectlombok:lombok'
+	annotationProcessor 'org.projectlombok:lombok'
+
+	// Development Tools
+	developmentOnly 'org.springframework.boot:spring-boot-devtools'
+
+	// Database
+	runtimeOnly 'com.h2database:h2'
+	runtimeOnly 'org.mariadb.jdbc:mariadb-java-client'
+
+	// Test Dependencies
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testImplementation 'org.springframework.security:spring-security-test'
+	testImplementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter-test:3.0.4'
+	testCompileOnly 'org.projectlombok:lombok'
+	testAnnotationProcessor 'org.projectlombok:lombok'
+	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+	implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
+
+	// FFmpeg 라이브러리 (동영상 처리용)
+	implementation 'net.bramp.ffmpeg:ffmpeg:0.7.0'
+
+	// 파일 업로드 관련
+	implementation 'commons-io:commons-io:2.11.0'
+}
+
+tasks.named('test') {
+	useJUnitPlatform()
+}

@@ -1,0 +1,17 @@
+feature:
+  my-service:
+    enabled: false
+spring:
+  datasource:
+    url: jdbc:mariadb://localhost:3306/friend
+    username: root
+    password: 1234
+  jpa:
+    hibernate:
+      ddl-auto: validate # 운영 환경에서는 스키마 변경 방지
+
+logging:
+  level:
+    root: INFO # 로그 레벨을 최소화
+server:
+  port: 8080 # 운영 서버 포트

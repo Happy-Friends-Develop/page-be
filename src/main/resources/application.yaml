@@ -1,0 +1,30 @@
+feature:
+  my-service:
+    enabled: false
+mybatis:
+  mapper-locations: classpath:/mappers/**/*.xml
+  configuration:
+    map-underscore-to-camel-case: true
+    call-setters-on-nulls: true
+    jdbc-type-for-null: VARCHAR
+    default-fetch-size: 500
+
+spring:
+  profiles:
+    active: prod
+    include: storage,security
+  datasource:
+    driver-class-name: org.mariadb.jdbc.Driver
+  jpa:
+    properties:
+      hibernate:
+        format_sql: true
+        show_sql: true
+    open-in-view: false
+  servlet:
+    multipart:
+      max-request-size: 1024MB
+      max-file-size: 1024MB
+logging:
+  pattern:
+    console: ${LOGPATTERN_CONSOLE:%green(%d{HH:mm:ss.SSS}) %blue(%-5level) %red([%thread]) %yellow(%logger{15}) - %msg%n}
