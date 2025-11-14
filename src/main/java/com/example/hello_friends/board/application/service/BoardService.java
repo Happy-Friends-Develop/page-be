@@ -38,7 +38,7 @@ public class BoardService {
     @Transactional
     public BoardResponse createBoard(BoardRequest request, List<MultipartFile> files, Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException("ID " + userId + "에 해당하는 사용자를 찾을 수 없음"));
+                .orElseThrow(() -> new UserNotFoundException("해당하는 사용자를 찾을 수 없습니다. ID : " + userId));
 
         Board board = new Board(request.getTitle(), request.getContent(), user, request.getBoardType());
 

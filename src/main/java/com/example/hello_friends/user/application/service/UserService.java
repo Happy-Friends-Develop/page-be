@@ -6,6 +6,7 @@ import com.example.hello_friends.auth.domain.Auth;
 import com.example.hello_friends.board.domain.BoardLikeRepository;
 import com.example.hello_friends.board.domain.BoardRepository;
 import com.example.hello_friends.common.entity.EntityState;
+import com.example.hello_friends.common.exception.UserNotFoundException;
 import com.example.hello_friends.user.application.request.UserRequest;
 import com.example.hello_friends.user.application.request.UserUpdateRequest;
 import com.example.hello_friends.user.application.response.UserResponse;
@@ -36,7 +37,7 @@ public class UserService {
     @Transactional
     public UserResponse register(UserRequest userRequest) {
         if (userRequest.getId() == null) {
-            throw new IllegalArgumentException("로그인 ID가 존재하지 않음");
+            throw new UserNotFoundException("로그인 ID가 존재하지 않음");
         }
         blackUserService.validateUserRegistration(userRequest.getEmail(), userRequest.getPhone());
 
@@ -52,7 +53,7 @@ public class UserService {
     @Transactional(readOnly = true)
     public UserResponse findUserInformation(Long id) {
         User user = userRepository.findByIdAndState(id, EntityState.ACTIVE)
-                .orElseThrow(() -> new IllegalArgumentException("ID " + id + "에 해당하는 사용자를 찾을 수 없음"));
+                .orElseThrow(() -> new UserNotFoundException("해당하는 사용자를 찾을 수 없습니다. ID : " + id));
         // 엔티티를 DTO로 변환하여 반환
         return UserResponse.from(user);
     }
@@ -71,7 +72,7 @@ public class UserService {
     @Transactional
     public UserResponse updateUserInformation(Long id, UserUpdateRequest userUpdateRequest) {
         User user = userRepository.findByIdAndState(id, EntityState.ACTIVE)
-                .orElseThrow(() -> new IllegalArgumentException("ID " + id + "에 해당하는 사용자를 찾을 수 없어 수정 불가"));
+                .orElseThrow(() -> new User("ID " + id + "에 해당하는 사용자를 찾을 수 없어 수정 불가"));
 
         user.update(userUpdateRequest.getName(), userUpdateRequest.getNickname(), userUpdateRequest.getPhone(), userUpdateRequest.getEmail(), userUpdateRequest.getAddress(), userUpdateRequest.getBirth());
 
