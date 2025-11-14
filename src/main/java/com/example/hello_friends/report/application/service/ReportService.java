@@ -4,18 +4,23 @@ import com.example.hello_friends.board.domain.Board;
 import com.example.hello_friends.board.domain.BoardRepository;
 import com.example.hello_friends.comment.domain.Comment;
 import com.example.hello_friends.comment.domain.CommentRepository;
+import com.example.hello_friends.common.exception.BoardNotFoundException;
+import com.example.hello_friends.common.exception.CommentNotFoundException;
+import com.example.hello_friends.common.exception.ReportNotFoundException;
+import com.example.hello_friends.common.exception.UserNotFoundException;
+import com.example.hello_friends.common.response.MotherException;
 import com.example.hello_friends.notification.application.service.NotificationService;
 import com.example.hello_friends.report.application.reportEnum.ReportStatus;
 import com.example.hello_friends.report.application.reportEnum.ReportType;
 import com.example.hello_friends.report.application.response.ReportResponse;
 import com.example.hello_friends.report.domain.Report;
 import com.example.hello_friends.report.domain.ReportRepository;
-import com.example.hello_friends.security.userdetail.Role;
 import com.example.hello_friends.user.application.service.BlackUserService;
 import com.example.hello_friends.user.domain.User;
 import com.example.hello_friends.user.domain.UserRepository;
 import com.example.hello_friends.user.domain.UserRole;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,11 +41,11 @@ public class ReportService {
     public void createReport(Long reporterId, ReportType reportType, Long contentId, String reason) {
         // 신고자 정보
         User reporter = userRepository.findById(reporterId)
-                .orElseThrow(() -> new IllegalArgumentException("신고자를 찾을 수 없습니다."));
+                .orElseThrow(() -> new UserNotFoundException("신고자를 찾을 수 없습니다. ID : " + reporterId));
         User reportedUser = findContentAuthor(reportType, contentId);
 
         if (reportRepository.existsByReporterAndReportTypeAndContentId(reporter, reportType, contentId)) {
-            throw new IllegalStateException("이미 신고한 컨텐츠입니다.");
+            throw new MotherException("이미 신고한 컨텐츠입니다.", HttpStatus.BAD_REQUEST);
         }
 
         Report report = new Report(reporter, reportedUser, reportType, contentId, reason);
@@ -62,28 +67,28 @@ public class ReportService {
     private User findContentAuthor(ReportType reportType, Long contentId) {
         if (reportType == ReportType.BOARD) {
             Board board = boardRepository.findById(contentId)
-                    .orElseThrow(() -> new IllegalArgumentException("신고하려는 게시글을 찾을 수 없습니다."));
+                    .orElseThrow(() -> new BoardNotFoundException("신고하려는 게시글을 찾을 수 없습니다. ID : " + contentId));
             return board.getUser();
         } else if (reportType == ReportType.COMMENT) {
             Comment comment = commentRepository.findById(contentId)
-                    .orElseThrow(() -> new IllegalArgumentException("신고하려는 댓글을 찾을 수 없습니다."));
+                    .orElseThrow(() -> new CommentNotFoundException("신고하려는 댓글을 찾을 수 없습니다. ID : " + contentId));
             return comment.getUser();
         }
-        throw new IllegalArgumentException("알 수 없는 컨텐츠 타입입니다.");
+        throw new MotherException("알 수 없는 컨텐츠 타입입니다.", HttpStatus.BAD_REQUEST);
     }
 
     // 신고한 내용 조회
     @Transactional(readOnly = true)
-    public ReportResponse getReport(Long id){
+    public ReportResponse getReport(Long id) {
         Report report = reportRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("해당 신고가 없습니다. id=" + id));
+                .orElseThrow(() -> new ReportNotFoundException("해당 신고가 없습니다. ID : " + id));
 
         return ReportResponse.from(report);
     }
 
     // 신고 목록 조회
     @Transactional(readOnly = true)
-    public List<ReportResponse> getReportList(){
+    public List<ReportResponse> getReportList() {
         List<Report> reportList = reportRepository.findAll();
 
         return reportList.stream()
@@ -95,7 +100,7 @@ public class ReportService {
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     public ReportResponse processReport(Long reportId, boolean isAccepted, String adminMemo) {
         Report report = reportRepository.findById(reportId)
-                .orElseThrow(() -> new IllegalArgumentException("처리할 신고를 찾을 수 없습니다."));
+                .orElseThrow(() -> new ReportNotFoundException("처리할 신고를 찾을 수 없습니다. ID : " + reportId));
 
         // 중복 처리 방지
         if (report.getStatus() != ReportStatus.PENDING) {
