@@ -7,6 +7,7 @@ import com.example.hello_friends.board.domain.BoardLikeRepository;
 import com.example.hello_friends.board.domain.BoardRepository;
 import com.example.hello_friends.common.entity.EntityState;
 import com.example.hello_friends.common.exception.UserNotFoundException;
+import com.example.hello_friends.common.response.MotherException;
 import com.example.hello_friends.user.application.request.UserRequest;
 import com.example.hello_friends.user.application.request.UserUpdateRequest;
 import com.example.hello_friends.user.application.response.UserResponse;
@@ -16,6 +17,7 @@ import com.example.hello_friends.user.domain.User;
 import com.example.hello_friends.user.domain.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -72,7 +74,7 @@ public class UserService {
     @Transactional
     public UserResponse updateUserInformation(Long id, UserUpdateRequest userUpdateRequest) {
         User user = userRepository.findByIdAndState(id, EntityState.ACTIVE)
-                .orElseThrow(() -> new User("ID " + id + "에 해당하는 사용자를 찾을 수 없어 수정 불가"));
+                .orElseThrow(() -> new UserNotFoundException("해당하는 사용자를 찾을 수 없습니다. ID : " + id));
 
         user.update(userUpdateRequest.getName(), userUpdateRequest.getNickname(), userUpdateRequest.getPhone(), userUpdateRequest.getEmail(), userUpdateRequest.getAddress(), userUpdateRequest.getBirth());
 
@@ -90,7 +92,7 @@ public class UserService {
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     public UserResponse blackListUser(Long id, String reason, LocalDateTime endDate) {
         User user = userRepository.findByIdAndState(id, EntityState.ACTIVE)
-                .orElseThrow(() -> new IllegalArgumentException("ID " + id + "에 해당하는 사용자를 찾을 수 없음"));
+                .orElseThrow(() -> new UserNotFoundException("해당하는 사용자를 찾을 수 없습니다. ID : " + id));
 
         if (blackUserRepository.existsByUserAndState(user, EntityState.ACTIVE)) {
             BlackUser existingBlackUser = blackUserRepository.findByUserAndState(user, EntityState.ACTIVE)
@@ -110,10 +112,10 @@ public class UserService {
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     public UserResponse unblackListUser(Long id, String memo) {
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("ID " + id + "에 해당하는 사용자를 찾을 수 없음"));
+                .orElseThrow(() -> new UserNotFoundException("해당하는 사용자를 찾을 수 없습니다. ID : " + id));
 
         BlackUser blackUser = blackUserRepository.findByUserAndState(user, EntityState.ACTIVE)
-                .orElseThrow(() -> new IllegalStateException("블랙리스트에 등록되지 않은 사용자입니다."));
+                .orElseThrow(() -> new MotherException("블랙리스트에 등록되지 않은 사용자입니다.", HttpStatus.BAD_REQUEST));
 
         blackUser.deactivate(memo);
         user.activate();
