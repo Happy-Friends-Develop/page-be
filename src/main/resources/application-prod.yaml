@@ -1,3 +1,9 @@
+file:
+  upload:
+    path: C:/Users/msk03/Desktop/jobAnything/resource/happy-friends/
+    image: images
+    video: videos
+
 feature:
   my-service:
     enabled: false

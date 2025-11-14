@@ -22,10 +22,10 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 public class FileService {
-    //@Value("${file.upload.path}")
+    @Value("${file.upload.path}")
     private String uploadPath;
 
-    //@Value("${file.upload.image}")
+    @Value("${file.upload.image}")
     private String imagePath;
 
     private final BoardFileRepository boardFileRepository; // DB 작업을 위해 Repository 주입

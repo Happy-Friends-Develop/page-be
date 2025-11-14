@@ -25,10 +25,10 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class VideoService {
-    //@Value("${file.upload.path}")
+    @Value("${file.upload.path}")
     private String uploadPath;
 
-    //@Value("${file.upload.video}")
+    @Value("${file.upload.video}")
     private String videoPath;
 
     private final BoardFileRepository boardFileRepository; // DB 작업을 위해 Repository 주입
