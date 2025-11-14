@@ -1,5 +1,9 @@
 package com.example.hello_friends.event.application.service;
 
+import com.example.hello_friends.common.exception.EventNotFoundException;
+import com.example.hello_friends.common.exception.NoAuthorityException;
+import com.example.hello_friends.common.exception.UserNotFoundException;
+import com.example.hello_friends.common.response.MotherException;
 import com.example.hello_friends.event.application.EventType;
 import com.example.hello_friends.event.application.request.EventCreateRequest;
 import com.example.hello_friends.event.application.response.EventResponse;
@@ -10,6 +14,7 @@ import com.example.hello_friends.event.domain.EventRepository;
 import com.example.hello_friends.user.domain.User;
 import com.example.hello_friends.user.domain.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,7 +35,7 @@ public class EventService {
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     public EventResponse createEvent(EventCreateRequest request, Long authorId, EventType eventType) {
         User author = userRepository.findById(authorId)
-                .orElseThrow(() -> new IllegalArgumentException("작성자를 찾을 수 없습니다."));
+                .orElseThrow(() -> new UserNotFoundException("작성자를 찾을 수 없습니다. ID : " + authorId));
 
         Event event = new Event(request.getTitle(), request.getContent(), eventType, author, request.getStartDate(), request.getEndDate());
 
@@ -39,9 +44,9 @@ public class EventService {
     }
 
     @Transactional
-    public EventResponse updateEvent(EventCreateRequest request, Long eventId){
+    public EventResponse updateEvent(EventCreateRequest request, Long eventId) {
         Event event = eventRepository.findById(eventId)
-                .orElseThrow(() -> new IllegalArgumentException("해당 이벤트를 찾을 수 없습니다."));
+                .orElseThrow(() -> new EventNotFoundException("해당 이벤트를 찾을 수 없습니다. ID : " + eventId));
 
         event.update(request.getTitle(), request.getTitle(), request.getStartDate(), request.getEndDate());
 
@@ -52,7 +57,7 @@ public class EventService {
     @Transactional(readOnly = true)
     public EventResponse getEventById(Long eventId) {
         Event event = eventRepository.findById(eventId)
-                .orElseThrow(() -> new IllegalArgumentException("해당 이벤트를 찾을 수 없습니다."));
+                .orElseThrow(() -> new EventNotFoundException("해당 이벤트를 찾을 수 없습니다. ID : " + eventId));
 
         return EventResponse.from(event);
     }
@@ -77,22 +82,22 @@ public class EventService {
     @Transactional
     public void joinEvent(Long eventId, Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+                .orElseThrow(() -> new UserNotFoundException("사용자를 찾을 수 없습니다. ID : " + userId));
         Event event = eventRepository.findById(eventId)
-                .orElseThrow(() -> new IllegalArgumentException("이벤트를 찾을 수 없습니다."));
+                .orElseThrow(() -> new EventNotFoundException("이벤트를 찾을 수 없습니다. ID : " + eventId));
 
         if (event.getEventType() == EventType.NOTICE) {
-            throw new IllegalArgumentException("공지사항에는 참여할 수 없습니다.");
+            throw new NoAuthorityException("공지사항에는 참여할 수 없습니다.");
         }
 
         LocalDateTime now = LocalDateTime.now();
         // 현재 시간이 이벤트 시작 전이거나 종료 후인 경우 예외 발생
         if (now.isBefore(event.getStartDate()) || now.isAfter(event.getEndDate())) {
-            throw new IllegalStateException("이벤트 참여 기간이 아닙니다.");
+            throw new MotherException("이벤트 참여 기간이 아닙니다.", HttpStatus.BAD_REQUEST);
         }
 
         if (eventParticipantRepository.existsByUserAndEvent(user, event)) {
-            throw new IllegalStateException("이미 참여한 이벤트입니다.");
+            throw new MotherException("이미 참여한 이벤트입니다.", HttpStatus.BAD_REQUEST);
         }
 
         EventParticipant participant = new EventParticipant(user, event);
@@ -103,13 +108,13 @@ public class EventService {
     @Transactional
     public void cancelEventParticipation(Long eventId, Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+                .orElseThrow(() -> new UserNotFoundException("사용자를 찾을 수 없습니다. ID : " + userId));
         Event event = eventRepository.findById(eventId)
-                .orElseThrow(() -> new IllegalArgumentException("이벤트를 찾을 수 없습니다."));
+                .orElseThrow(() -> new EventNotFoundException("이벤트를 찾을 수 없습니다. ID : " + eventId));
 
         // 사용자의 참가 기록을 찾고 없으면 예외를 발생
         EventParticipant participant = eventParticipantRepository.findByUserAndEvent(user, event)
-                .orElseThrow(() -> new IllegalStateException("이벤트에 참여한 기록이 없습니다."));
+                .orElseThrow(() -> new MotherException("이벤트에 참여한 기록이 없습니다.", HttpStatus.BAD_REQUEST));
 
         // 찾은 참가 기록을 데이터베이스에서 삭제
         eventParticipantRepository.delete(participant);
