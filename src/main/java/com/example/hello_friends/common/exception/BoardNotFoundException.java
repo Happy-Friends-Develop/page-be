@@ -1,6 +1,8 @@
 package com.example.hello_friends.common.exception;
 
-public class BoardNotFoundException extends RuntimeException {
+import com.example.hello_friends.common.response.MotherException;
+
+public class BoardNotFoundException extends MotherException {
     public BoardNotFoundException(String message) {
         super(message);
     }

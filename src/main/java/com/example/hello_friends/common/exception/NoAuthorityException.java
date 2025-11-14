@@ -1,6 +1,8 @@
 package com.example.hello_friends.common.exception;
 
-public class NoAuthorityException extends RuntimeException {
+import com.example.hello_friends.common.response.MotherException;
+
+public class NoAuthorityException extends MotherException {
     public NoAuthorityException(String message) {
         super(message);
     }
