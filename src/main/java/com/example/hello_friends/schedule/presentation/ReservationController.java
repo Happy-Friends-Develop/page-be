@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -22,30 +23,30 @@ public class ReservationController {
 
     @Operation(summary = "예약하기", description = "특정 스케줄(날짜 옵션)을 지정된 인원수만큼 예약합니다.")
     @PostMapping("/api/user/reservation")
-    public Resp<ReservationResponse> createReservation(
+    public ResponseEntity<Resp<ReservationResponse>> createReservation(
             @Parameter(hidden = true) @Auth JwtPrincipalDto jwtPrincipalDto,
             @RequestBody ReservationRequest reservationRequest
     ) {
         ReservationResponse reservationResponse = reservationService.createReservation(jwtPrincipalDto.getId(), reservationRequest);
-        return Resp.ok(reservationResponse);
+        return ResponseEntity.ok(Resp.ok(reservationResponse));
     }
 
     @Operation(summary = "내 예약 목록 조회", description = "현재 로그인한 사용자의 모든 예약 내역을 조회합니다.")
     @GetMapping("/api/user/reservation/list")
-    public Resp<List<ReservationResponse>> getMyReservations(
+    public ResponseEntity<Resp<List<ReservationResponse>>> getMyReservations(
             @Parameter(hidden = true) @Auth JwtPrincipalDto jwtPrincipalDto
     ) {
         List<ReservationResponse> myReservations = reservationService.getMyReservations(jwtPrincipalDto.getId());
-        return Resp.ok(myReservations);
+        return ResponseEntity.ok(Resp.ok(myReservations));
     }
 
     @Operation(summary = "예약 취소", description = "자신의 예약 내역 중 특정 예약을 취소합니다.")
     @DeleteMapping("/api/user/reservations/{reservationId}")
-    public Resp<String> cancelReservation(
+    public ResponseEntity<Resp<String>> cancelReservation(
             @Parameter(hidden = true) @Auth JwtPrincipalDto jwtPrincipalDto,
             @Parameter(description = "취소할 예약의 ID") @PathVariable Long reservationId
     ) {
         reservationService.cancelReservation(jwtPrincipalDto.getId(), reservationId);
-        return Resp.ok("예약이 성공적으로 취소되었습니다.");
+        return ResponseEntity.ok(Resp.ok("예약이 성공적으로 취소되었습니다."));
     }
 }
