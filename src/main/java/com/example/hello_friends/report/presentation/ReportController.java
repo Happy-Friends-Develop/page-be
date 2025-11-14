@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -23,7 +24,7 @@ public class ReportController {
 
     @Operation(summary = "컨텐츠 신고", description = "게시글 또는 댓글을 신고합니다.")
     @PostMapping("/api/user/report")
-    public Resp<String> createReport(@RequestBody ReportRequest reportRequest, @Parameter(hidden = true) @Auth JwtPrincipalDto jwtPrincipalDto) {
+    public ResponseEntity<Resp<String>> createReport(@RequestBody ReportRequest reportRequest, @Parameter(hidden = true) @Auth JwtPrincipalDto jwtPrincipalDto) {
         reportService.createReport(
                 jwtPrincipalDto.getId(),
                 reportRequest.getReportType(),
@@ -31,24 +32,24 @@ public class ReportController {
                 reportRequest.getReason()
         );
 
-        return Resp.ok("신고가 성공적으로 접수되었습니다.");
+        return ResponseEntity.ok(Resp.ok("신고가 성공적으로 접수되었습니다."));
     }
 
     @Operation(summary = "신고 내용 조회", description = "신고 내용을 조회합니다.")
     @GetMapping("/api/admin/reports/{id}")
-    public ReportResponse getReport(@PathVariable Long id){
-        return reportService.getReport(id);
+    public ResponseEntity<Resp<ReportResponse>> getReport(@PathVariable Long id){
+        return ResponseEntity.ok(Resp.ok(reportService.getReport(id)));
     }
 
     @Operation(summary = "신고 목록 조회", description = "신고 내용 목록을 조회합니다.")
     @GetMapping("/api/admin/reports")
-    public Resp<List<ReportResponse>> getReportList(){
-        return Resp.ok(reportService.getReportList());
+    public ResponseEntity<Resp<List<ReportResponse>>> getReportList(){
+        return ResponseEntity.ok(Resp.ok(reportService.getReportList()));
     }
 
     @Operation(summary = "관리자 신고 처리", description = "관리자가 신고를 승인 또는 반려 처리합니다.")
     @PatchMapping("/api/admin/reports/{reportId}")
-    public Resp<ReportResponse> processReport(
+    public ResponseEntity<Resp<ReportResponse>> processReport(
             @PathVariable Long reportId,
             @RequestBody ReportProcessRequest reportProcessRequest,
             @Parameter(hidden = true) @Auth JwtPrincipalDto jwtPrincipalDto // ADMIN 권한 검증
@@ -59,6 +60,6 @@ public class ReportController {
                 reportProcessRequest.getAdminMemo()
         );
 
-        return Resp.ok(response);
+        return ResponseEntity.ok(Resp.ok(response));
     }
 }
