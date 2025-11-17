@@ -75,6 +75,12 @@ dependencies {
 
 	// 파일 업로드 관련
 	implementation 'commons-io:commons-io:2.11.0'
+
+	// Spring Batch
+	implementation 'org.springframework.boot:spring-boot-starter-batch'
+
+	// Spring Batch Test
+	testImplementation 'org.springframework.boot:spring-batch-test'
 }
 
 tasks.named('test') {
