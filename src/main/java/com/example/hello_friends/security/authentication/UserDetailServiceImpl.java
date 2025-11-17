@@ -13,6 +13,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -24,26 +25,26 @@ public class UserDetailServiceImpl implements UserDetailsService {
     private final UserRepository userRepository;
 
     @Override
+    @Transactional(readOnly = true)
     public UserDetails loadUserByUsername(String loginId) throws UsernameNotFoundException {
-        try {
-            Auth auth = authRepository.findByLoginId(loginId)
-                    .orElseThrow(() -> new BadCredentialsException("계정 정보가 없습니다."));
+        Auth auth = authRepository.findByLoginId(loginId)
+                .orElseThrow(() -> new UsernameNotFoundException("계정 정보가 없습니다. (loginId: " + loginId + ")"));
 
-            Optional<User> optionalUser = userRepository.findByAuthId(auth.getId());
-            if (optionalUser.isPresent()) {
-                User user = optionalUser.get();
-                return UserPrincipal.of(
-                        user.getId(),
-                        auth.getLoginId(),
-                        auth.getPwd(),
-                        List.of(new SimpleGrantedAuthority(user.getUserRole().toRole().getRoleName()))
-                );
-            }
+        User user = userRepository.findByAuthId(auth.getId())
+                .orElseThrow(() -> new UsernameNotFoundException("연결된 사용자 정보가 없습니다. (authId: " + auth.getId() + ")"));
+
+        try {
+            return UserPrincipal.of(
+                    auth.getId(),
+                    auth.getLoginId(),
+                    auth.getPwd(),
+                    List.of(new SimpleGrantedAuthority(user.getUserRole().toRole().getRoleName())),
+                    user.getStatus()
+            );
         } catch (PrincipalArgumentException e) {
             throw new PrincipalArgumentException();
         } catch (UsernameNotFoundException e) {
             throw new UsernameNotFoundException("계정 정보가 없습니다.");
         }
-        throw new BadCredentialsException("계정 정보가 없습니다.");
     }
 }
