@@ -22,7 +22,7 @@ public class LoginController {
     private final JwtUtil jwtUtil;
 
     @PostMapping("/api/auth")
-    @Operation(summary = "로그인 기능", description = "KIOSK, ADMIN 에 대해 공통된 로그인 엔드포인트를 제공하며, JWT 토큰을 반환한다. JWT 토큰은 'Authorization' 헤더에 삽입해 사용합니다.")
+    @Operation(summary = "로그인 기능", description = "사용자에 대해 공통된 로그인 엔드포인트를 제공하며, JWT 토큰을 반환한다. JWT 토큰은 'Authorization' 헤더에 삽입해 사용합니다.")
     Resp<String> login(@Valid @RequestBody LoginRequest loginRequest) {
         UsernamePasswordAuthenticationToken unauthenticated = UsernamePasswordAuthenticationToken.unauthenticated(loginRequest.getLoginId(), loginRequest.getPwd());
         Authentication authenticate = authenticationProvide.authenticate(unauthenticated);
