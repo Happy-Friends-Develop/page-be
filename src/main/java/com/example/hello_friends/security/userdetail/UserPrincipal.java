@@ -1,12 +1,14 @@
 package com.example.hello_friends.security.userdetail;
 
 import com.example.hello_friends.user.domain.MemberStatus; // ✨ (O) MemberStatus 임포트
+import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
 
 import java.util.Collection;
 
 public class UserPrincipal extends AbstractPrincipal {
     private final String type = "USER";
+    @Getter
     private final MemberStatus userStatus;
 
     public static UserPrincipal of(Long id, String loginId, String password,
