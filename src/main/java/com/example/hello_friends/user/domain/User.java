@@ -11,6 +11,7 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -27,7 +28,7 @@ public class User extends LogEntity {
     @Column(name ="user_name",nullable = false)
     private String name;
 
-    @Column(name="user_nickname", nullable = false)
+    @Column(name="user_nickname", nullable = false, unique = true)
     private String nickname;
 
     @Column(name="user_phone", nullable = false)
@@ -46,9 +47,16 @@ public class User extends LogEntity {
     @Enumerated(EnumType.STRING)
     private UserRole userRole;
 
+    // 게시글의 상태(관심사 분리)
     @Column(name ="user_state",nullable = false)
     @Enumerated(EnumType.STRING)
     private EntityState state;
+
+    private LocalDateTime lastLoginDate;
+
+    // 사용자의 상태(관심사 분리)
+    @Enumerated(EnumType.STRING)
+    private MemberStatus status;
 
     @Column(nullable = false)
     private Long authId;
@@ -100,5 +108,9 @@ public class User extends LogEntity {
 
     public void activate(){
         this.state = EntityState.ACTIVE;
+    }
+
+    public void updateLastLoginDate() {
+        this.lastLoginDate = LocalDateTime.now();
     }
 }
