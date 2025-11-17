@@ -17,7 +17,7 @@ public class CustomAuthFailureHandler implements AuthenticationFailureHandler {
     public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response,
                                         AuthenticationException exception) throws IOException, ServletException {
 
-        String failureUrl = "/login-form?error=true"; // 기본 실패 URL (아이디/비번 틀림) 추후 수정예정
+        String failureUrl = "/login-form?error=true"; // 기본 실패 URL (아이디/비번 틀림)
 
         // 휴면 계정 예외인 경우
         if (exception instanceof AccountDormantException) {
@@ -28,11 +28,11 @@ public class CustomAuthFailureHandler implements AuthenticationFailureHandler {
             // 이 loginId를 세션에 저장
             request.getSession().setAttribute("dormantLoginId", loginId);
 
-            // '휴면 계정 복구 전용 페이지'로 리다이렉트
+            // '휴면 계정 복구 전용 페이지'로 리다이렉트 + 추후 수정예정
             failureUrl = "/members/reactivate";
 
         } else if (exception instanceof DisabledException) {
-            // (탈퇴한 계정)
+            // (탈퇴한 계정) + 추후 수정예정
             failureUrl = "/login-form?error=withdrawn";
         }
 
