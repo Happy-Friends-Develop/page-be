@@ -1,6 +1,8 @@
 package com.example.hello_friends.security.authentication;
 
+import com.example.hello_friends.common.exception.AccountDormantException;
 import com.example.hello_friends.security.userdetail.UserPrincipal;
+import com.example.hello_friends.user.domain.MemberStatus;
 import com.example.hello_friends.user.domain.User;
 import com.example.hello_friends.user.domain.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -32,26 +34,38 @@ public class AuthenticationProvideImpl implements AuthenticationProvider {
 
         UserDetails userDetails = userDetailsService.loadUserByUsername(loginId);
 
-        if (!userDetails.isEnabled()) {
-            throw new DisabledException("계정이 활성화되어 있지 않습니다. (휴면 또는 삭제됨)");
+        if (!passwordEncoder.matches(pwd, userDetails.getPassword())) {
+            throw new BadCredentialsException("비밀 번호가 일치하지 않습니다.");
         }
 
-        if (passwordEncoder.matches(pwd, userDetails.getPassword())) {
+        UserPrincipal userPrincipal = (UserPrincipal) userDetails;
+        MemberStatus status = userPrincipal.getUserStatus();
 
-            UserPrincipal userPrincipal = (UserPrincipal) userDetails;
-
+        // 활성 상태인 경우 로그인 성공
+        if (status == MemberStatus.ACTIVE) {
             Long authId = userPrincipal.getId();
-
             User user = userRepository.findByAuthId(authId)
-                    .orElseThrow(() -> new BadCredentialsException("사용자 정보를 찾을 수 없습니다. (데이터 불일치)"));
+                    .orElseThrow(() -> new BadCredentialsException("사용자 정보를 찾을 수 없습니다."));
 
             // 사용자 마지막 로그인 시간 업데이트
             user.updateLastLoginDate();
 
             return new UsernamePasswordAuthenticationToken(userDetails, pwd, userDetails.getAuthorities());
-        }
 
-        throw new BadCredentialsException("비밀 번호가 일치하지 않습니다.");
+        }
+        // 휴면 상태
+        else if (status == MemberStatus.DORMANT) {
+            throw new AccountDormantException("휴면 계정입니다. 본인 인증 후 복구가 필요합니다.", loginId);
+
+        }
+        // 탈퇴 상태
+        else if (status == MemberStatus.WITHDRAWN) {
+            throw new DisabledException("탈퇴한 계정입니다.");
+
+        }
+        else {
+            throw new DisabledException("계정이 활성화되어 있지 않습니다.");
+        }
     }
 
     @Override
