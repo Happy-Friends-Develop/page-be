@@ -9,6 +9,7 @@ import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.step.builder.StepBuilder;
 import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.batch.repeat.RepeatStatus;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -16,6 +17,7 @@ import org.springframework.transaction.PlatformTransactionManager;
 @Slf4j
 @Configuration
 @RequiredArgsConstructor
+@ConditionalOnProperty(prefix = "feature.spring-batch", name = "enabled", havingValue = "true")
 public class DailySettlementJobConfig {
     private final JobRepository jobRepository;
     private final PlatformTransactionManager transactionManager;
@@ -36,7 +38,7 @@ public class DailySettlementJobConfig {
         log.info("'dailySettlementStep1' Step Bean 등록");
 
         return new StepBuilder("dailySettlementStep1", jobRepository)
-                // 이 Step은 'simpleTasklet'이라는 간단한 일을 수행합니다.
+                // 이 Step은 'simpleTasklet'이라는 간단한 일을 수행
                 .tasklet(simpleTasklet(), transactionManager)
                 .build();
     }
@@ -47,7 +49,7 @@ public class DailySettlementJobConfig {
         log.info(">>>>> 'simpleTasklet' Tasklet Bean 등록");
 
         return (contribution, chunkContext) -> {
-            // Tasklet이 실행되는 시점에 이 코드가 동작합니다.
+            // Tasklet이 실행되는 시점에 이 코드가 동작
             log.info(">>>>>>>>>> Hello, Spring Batch! (일일 정산 시작)");
             log.info(">>>>>>>>>> (정산 로직 수행중...)");
             log.info(">>>>>>>>>> Hello, Spring Batch! (일일 정산 완료)");
