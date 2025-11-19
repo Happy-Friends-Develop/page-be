@@ -21,7 +21,13 @@ import java.util.List;
 @Table(name = "user")
 public class User extends LogEntity {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @SequenceGenerator(
+            name = "user_seq_gen",
+            sequenceName = "user_seq",
+            initialValue = 1,
+            allocationSize = 1
+    )
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "user_seq_gen")
     @Column(name="user_id")
     private Long id;
 

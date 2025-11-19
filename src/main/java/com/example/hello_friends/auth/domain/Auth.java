@@ -7,14 +7,18 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
-// 매개변수 없는 기본 생성자
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
-// 고유 제약 조건 설정
 @Table(uniqueConstraints = {@UniqueConstraint(columnNames = {"loginId"})})
 public class Auth extends LogEntity {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @SequenceGenerator(
+            name = "auth_seq_gen",
+            sequenceName = "auth_seq",
+            initialValue = 1,
+            allocationSize = 1
+    )
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "auth_seq_gen")
     @Column(name="auth_id")
     private Long id;
 
