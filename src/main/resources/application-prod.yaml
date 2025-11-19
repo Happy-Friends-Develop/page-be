@@ -4,6 +4,10 @@ file:
     image: images
     video: videos
 
+kakao:
+  api:
+    key: ${KAKAO_KEY}
+
 feature:
   my-service:
     enabled: false
