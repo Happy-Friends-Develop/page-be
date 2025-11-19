@@ -86,6 +86,9 @@ public class JwtFilterProd extends JwtFilter {
         else if (path.startsWith("/swagger-ui") || path.startsWith("/v3/api-docs")) {
             return true;
         }
+        else if (path.startsWith("/api/user/register") && method.equals("POST")){
+            return true;
+        }
         return false;
     }
 }
