@@ -91,6 +91,7 @@ public class User extends LogEntity {
         this.state = EntityState.ACTIVE;
         this.authId = authId;
         this.birth = birth;
+        this.status = MemberStatus.ACTIVE;
     }
 
     public void update(String name, String nickname, String phone, String email, String address, String birth){
