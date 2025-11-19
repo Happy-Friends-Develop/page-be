@@ -36,7 +36,7 @@ public class NotificationService {
         return emitter;
     }
 
-    // 전송 로직
+    // url 있는 알림 전송 로직
     public void send(User receiver, String content, String url) {
         Notification notification = notificationRepository.save(
                 createNotification(receiver, content, url)
@@ -57,11 +57,42 @@ public class NotificationService {
         }
     }
 
+    // url 없는 알림 전송 로직
+    public void send(User receiver, String content){
+        Notification notification = notificationRepository.save(
+                createNotification(receiver, content)
+        );
+
+        if (emitters.containsKey(receiver.getId())){
+            SseEmitter emitter = emitters.get(receiver.getId());
+            try {
+                // DTO를 JSON 문자열로 변환
+                String jsonResponse = objectMapper.writeValueAsString(NotificationResponse.noUrlFrom(notification));
+
+                emitter.send(SseEmitter.event()
+                        .name("notification")
+                        .data(jsonResponse)); // JSON 데이터를 전송
+            } catch (IOException e) {
+                emitters.remove(receiver.getId());
+            }
+        }
+    }
+
+    // url 존재하는 알림
     private Notification createNotification(User receiver, String content, String url) {
         return Notification.builder()
                 .receiver(receiver)
                 .content(content)
                 .url(url)
+                .isRead(false)
+                .build();
+    }
+
+    // url 없는 알림(Overloading)
+    private Notification createNotification(User receiver, String content){
+        return Notification.builder()
+                .receiver(receiver)
+                .content(content)
                 .isRead(false)
                 .build();
     }
