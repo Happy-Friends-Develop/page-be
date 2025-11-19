@@ -93,7 +93,7 @@ public class ReservationService {
     // 판매자나 관리자가 예약 강제 취소
     @Transactional
     @PreAuthorize("hasAnyRole('ROLE_SELLER', 'ROLE_ADMIN')")
-    public void forceCancelReservation(Long requesterId, Long reservationId) {
+    public void forceCancelReservation(Long userId, Long reservationId) {
         Reservation reservation = reservationRepository.findById(reservationId)
                 .orElseThrow(() -> new ReservationNotFoundException("존재하지 않는 예약입니다. ID : " + reservationId));
 
