@@ -21,7 +21,7 @@ public class Notification extends LogEntity {
     @Column(nullable = false)
     private String content;
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     private String url;
 
     @Column(nullable = false)
