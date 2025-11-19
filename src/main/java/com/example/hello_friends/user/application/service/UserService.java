@@ -3,6 +3,7 @@ package com.example.hello_friends.user.application.service;
 import com.example.hello_friends.auth.application.AuthBody;
 import com.example.hello_friends.auth.application.AuthService;
 import com.example.hello_friends.auth.domain.Auth;
+import com.example.hello_friends.auth.domain.AuthRepository;
 import com.example.hello_friends.board.domain.BoardLikeRepository;
 import com.example.hello_friends.board.domain.BoardRepository;
 import com.example.hello_friends.common.entity.EntityState;
@@ -35,6 +36,7 @@ public class UserService {
     private final BlackUserService blackUserService;
     private final BoardLikeRepository boardLikeRepository;
     private final BoardRepository boardRepository;
+    private final AuthRepository authRepository;
 
     @Transactional
     public UserResponse register(UserRequest userRequest) {
@@ -53,10 +55,19 @@ public class UserService {
 
     // 마이페이지 -> 사용자 정보 확인
     @Transactional(readOnly = true)
-    public UserResponse findUserInformation(Long id) {
+    public UserResponse findMyInformation(Long id) {
         User user = userRepository.findByIdAndState(id, EntityState.ACTIVE)
                 .orElseThrow(() -> new UserNotFoundException("해당하는 사용자를 찾을 수 없습니다. ID : " + id));
         // 엔티티를 DTO로 변환하여 반환
+        return UserResponse.from(user);
+    }
+
+    // 관리자용 사용자 정보 확인
+    @Transactional(readOnly = true)
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    public UserResponse findUserInformation(Long id){
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException("해당하는 사용자를 찾을 수 없습니다. ID : " + id));
         return UserResponse.from(user);
     }
 
@@ -84,7 +95,11 @@ public class UserService {
 
     @Transactional
     public void deleteUser(Long userId) {
-        userRepository.deleteById(userId);
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("사용자를 찾을 수 없습니다. ID : " + userId));
+        Long authId = user.getAuthId();
+        userRepository.delete(user);
+        authRepository.deleteById(authId);
     }
 
     // 블랙리스트 추가

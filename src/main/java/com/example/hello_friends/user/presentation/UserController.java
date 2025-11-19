@@ -34,10 +34,16 @@ public class UserController {
 
     @Operation(summary = "사용자 정보 조회", description = "마이페이지에서 로그인한 회원의 정보를 확인합니다.")
     @GetMapping("/api/user")
-    public ResponseEntity<Resp<UserResponse>> getUserInfo(
+    public ResponseEntity<Resp<UserResponse>> getMyInfo(
             @Parameter(hidden = true) @Auth JwtPrincipalDto jwtPrincipalDto
-            ) {
-        return ResponseEntity.ok(Resp.ok(userService.findUserInformation(jwtPrincipalDto.getId())));
+    ) {
+        return ResponseEntity.ok(Resp.ok(userService.findMyInformation(jwtPrincipalDto.getId())));
+    }
+
+    @Operation(summary = "다른 사용자 정보 조회", description = "관리자가 사용자의 정보를 확인합니다.")
+    @GetMapping("/api/admin/users/{id}")
+    public ResponseEntity<Resp<UserResponse>> getUserInfo(@PathVariable Long id) {
+        return ResponseEntity.ok(Resp.ok(userService.findUserInformation(id)));
     }
 
     @Operation(summary = "유저들 정보 조회", description = "회원들의 정보를 확인합니다.")
