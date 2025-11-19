@@ -1,11 +1,14 @@
 package com.example.hello_friends.user.presentation;
 
 import com.example.hello_friends.common.response.Resp;
+import com.example.hello_friends.security.annotation.Auth;
+import com.example.hello_friends.security.filter.JwtPrincipalDto;
 import com.example.hello_friends.user.application.request.*;
 import com.example.hello_friends.user.application.response.UserResponse;
 import com.example.hello_friends.user.application.service.BlackUserService;
 import com.example.hello_friends.user.application.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -30,9 +33,11 @@ public class UserController {
 
 
     @Operation(summary = "사용자 정보 조회", description = "마이페이지에서 로그인한 회원의 정보를 확인합니다.")
-    @GetMapping("/api/user/{id}")
-    public ResponseEntity<Resp<UserResponse>> getUserInfo(@PathVariable Long id) {
-        return ResponseEntity.ok(Resp.ok(userService.findUserInformation(id)));
+    @GetMapping("/api/user")
+    public ResponseEntity<Resp<UserResponse>> getUserInfo(
+            @Parameter(hidden = true) @Auth JwtPrincipalDto jwtPrincipalDto
+            ) {
+        return ResponseEntity.ok(Resp.ok(userService.findUserInformation(jwtPrincipalDto.getId())));
     }
 
     @Operation(summary = "유저들 정보 조회", description = "회원들의 정보를 확인합니다.")
