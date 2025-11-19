@@ -14,7 +14,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity; // [추가] ResponseEntity 임포트
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -32,14 +32,16 @@ public class BoardController {
             @Parameter(description = "게시글 제목") @RequestParam String title,
             @Parameter(description = "게시글 내용") @RequestParam String content,
             @Parameter(description = "첨부 파일들") @RequestPart(value = "files", required = false) List<MultipartFile> files,
+            @Parameter(description = "게시글 타입") @RequestParam  BoardType boardType,
             @Parameter(hidden = true) @Auth JwtPrincipalDto jwtPrincipalDto
     ) {
         BoardRequest boardRequest = BoardRequest.builder()
                 .title(title)
                 .content(content)
+                .boardType(boardType)
                 .build();
 
-        BoardResponse data = boardService.createBoard(boardRequest, files, jwtPrincipalDto.getId());
+        BoardResponse data = boardService.createBoard(boardRequest, files, jwtPrincipalDto.getId(), boardType);
 
         return ResponseEntity.ok(Resp.ok(data));
     }
