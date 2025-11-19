@@ -31,12 +31,13 @@ public class ReservationController {
         return ResponseEntity.ok(Resp.ok(reservationResponse));
     }
 
-    @Operation(summary = "내 예약 목록 조회", description = "현재 로그인한 사용자의 모든 예약 내역을 조회합니다.")
+    @Operation(summary = "내 예약 목록 조회", description = "옵션에 따라 전체, 예약중, 취소된 내역을 조회합니다. (type: ALL, RESERVED, CANCELED)")
     @GetMapping("/api/user/reservation/list")
     public ResponseEntity<Resp<List<ReservationResponse>>> getMyReservations(
-            @Parameter(hidden = true) @Auth JwtPrincipalDto jwtPrincipalDto
+            @Parameter(hidden = true) @Auth JwtPrincipalDto jwtPrincipalDto,
+            @Parameter(description = "조회할 타입 (ALL, RESERVED, CANCELED)") @RequestParam(required = false) String type
     ) {
-        List<ReservationResponse> myReservations = reservationService.getMyReservations(jwtPrincipalDto.getId());
+        List<ReservationResponse> myReservations = reservationService.getMyReservations(jwtPrincipalDto.getId(), type);
         return ResponseEntity.ok(Resp.ok(myReservations));
     }
 
@@ -48,5 +49,16 @@ public class ReservationController {
     ) {
         reservationService.cancelReservation(jwtPrincipalDto.getId(), reservationId);
         return ResponseEntity.ok(Resp.ok("예약이 성공적으로 취소되었습니다."));
+    }
+
+    @Operation(summary = "예약 강제 취소 (관리자/판매자용)", description = "판매자나 관리자가 권한을 사용하여 사용자의 예약을 강제로 취소하고 알림을 보냅니다.")
+    @DeleteMapping("/api/user/reservations/{reservationId}")
+    public ResponseEntity<Resp<String>> forceCancelReservation(
+            @Parameter(hidden = true) @Auth JwtPrincipalDto jwtPrincipalDto,
+            @Parameter(description = "취소할 예약의 ID") @PathVariable Long reservationId
+    ) {
+        reservationService.forceCancelReservation(jwtPrincipalDto.getId(), reservationId);
+
+        return ResponseEntity.ok(Resp.ok("관리자 권한으로 예약이 취소되었습니다."));
     }
 }
