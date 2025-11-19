@@ -32,4 +32,13 @@ public class NotificationResponse {
                 .createdAt(notification.getCreatedAt())
                 .build();
     }
+
+    public static NotificationResponse noUrlFrom(Notification notification){
+        return NotificationResponse.builder()
+                .id(notification.getId())
+                .content(notification.getContent())
+                .isRead(notification.isRead())
+                .createdAt(notification.getCreatedAt())
+                .build();
+    }
 }
