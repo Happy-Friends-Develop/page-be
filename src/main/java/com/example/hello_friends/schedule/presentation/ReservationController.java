@@ -52,7 +52,7 @@ public class ReservationController {
     }
 
     @Operation(summary = "예약 강제 취소 (관리자/판매자용)", description = "판매자나 관리자가 권한을 사용하여 사용자의 예약을 강제로 취소하고 알림을 보냅니다.")
-    @DeleteMapping("/api/user/reservations/{reservationId}")
+    @DeleteMapping("/api/admin/reservations/{reservationId}")
     public ResponseEntity<Resp<String>> forceCancelReservation(
             @Parameter(hidden = true) @Auth JwtPrincipalDto jwtPrincipalDto,
             @Parameter(description = "취소할 예약의 ID") @PathVariable Long reservationId
