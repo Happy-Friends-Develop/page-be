@@ -25,9 +25,18 @@ public class Reservation extends LogEntity {
     @Column(nullable = false)
     private int quantity; // 예약한 인원 수
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private ReservationStatus status;
+
     public Reservation(User user, Schedule schedule, int quantity){
         this.user = user;
         this.schedule = schedule;
         this.quantity = quantity;
+        this.status = ReservationStatus.RESERVED;
+    }
+
+    public void cancel() {
+        this.status = ReservationStatus.CANCELED;
     }
 }
