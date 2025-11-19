@@ -3,6 +3,7 @@ package com.example.hello_friends.board.application.service;
 import com.example.hello_friends.board.application.request.BoardRequest;
 import com.example.hello_friends.board.application.response.BoardResponse;
 import com.example.hello_friends.board.domain.*;
+import com.example.hello_friends.board.infra.GeocodingService;
 import com.example.hello_friends.common.entity.EntityState;
 import com.example.hello_friends.common.exception.BoardNotFoundException;
 import com.example.hello_friends.common.exception.NoAuthorityException;
@@ -21,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -33,6 +35,7 @@ public class BoardService {
     private final UserRepository userRepository;
     private final BoardLikeRepository boardLikeRepository;
     private final NotificationService notificationService;
+    private final GeocodingService geocodingService;
 
     // 보드 생성
     @Transactional
@@ -42,6 +45,19 @@ public class BoardService {
 
         Board board = new Board(request.getTitle(), request.getContent(), user, request.getBoardType());
 
+        // 주소 -> 좌표로 변환
+        if (request.getAddress() != null && !request.getAddress().isEmpty()) {
+            Map<String, Double> coords = geocodingService.getCoordinate(request.getAddress());
+            if (coords != null) {
+                // 좌표 저장
+                board.updateLocation(request.getAddress(), coords.get("latitude"), coords.get("longitude"));
+            } else {
+                // 좌표를 못 찾았으면 주소만 저장
+                board.updateLocation(request.getAddress(), null, null);
+            }
+        }
+
+        // 파일 처리
         if (files != null && !files.isEmpty()) {
             for (int i = 0; i < files.size(); i++) {
                 MultipartFile file = files.get(i);
@@ -72,7 +88,6 @@ public class BoardService {
                 .orElseThrow(() -> new BoardNotFoundException("해당 게시글이 없습니다. id=" + id));
 
         return BoardResponse.from(board);
-
     }
 
     // 게시글 목록 조회
@@ -89,17 +104,51 @@ public class BoardService {
                 .toList();
     }
 
+    // 선택한 주소 반경으로 조회
+    @Transactional(readOnly = true)
+    public List<BoardResponse> findNearbyBoards(String myAddress, Double radius) {
+        // 내 주소 -> 좌표 변환
+        Map<String, Double> myCoords = geocodingService.getCoordinate(myAddress);
+
+        if (myCoords == null) {
+            throw new IllegalArgumentException("주소를 찾을 수 없습니다: " + myAddress);
+        }
+
+        Double myLat = myCoords.get("latitude");
+        Double myLon = myCoords.get("longitude");
+
+        // 전달받은 radius(km) 만큼 조회
+        // radius가 null인 경우 10km로 설정
+        double searchRadius = (radius != null) ? radius : 10.0;
+
+        List<Board> nearbyBoards = boardRepository.findBoardsNearBy(myLat, myLon, searchRadius);
+
+        return nearbyBoards.stream()
+                .map(BoardResponse::from)
+                .toList();
+    }
+
     // 게시글 수정
     @Transactional
     public BoardResponse updateBoard(Long boardId, BoardRequest boardRequest, Long currentUserId) {
         Board board = boardRepository.findById(boardId)
                 .orElseThrow(() -> new BoardNotFoundException("해당 게시글이 존재하지 않습니다. ID: " + boardId));
 
-        // 게시글 작성자의 ID와 현재 요청한 사용자의 ID가 같은지 확인
         if (!board.getUser().getId().equals(currentUserId)) {
             throw new NoAuthorityException("게시글을 수정할 권한이 없습니다.");
         }
 
+        // 주소 수정 시 좌표 계산
+        if (boardRequest.getAddress() != null) {
+            Map<String, Double> coords = geocodingService.getCoordinate(boardRequest.getAddress());
+            if(coords != null){
+                board.updateLocation(boardRequest.getAddress(), coords.get("latitude"), coords.get("longitude"));
+            } else {
+                board.updateLocation(boardRequest.getAddress(), null, null);
+            }
+        }
+
+        // 제목, 내용, 타입 수정
         board.update(boardRequest.getTitle(), boardRequest.getContent(), boardRequest.getBoardType());
 
         return BoardResponse.from(board);
@@ -121,15 +170,13 @@ public class BoardService {
             throw new NoAuthorityException("게시글을 삭제할 권한이 없습니다.");
         }
 
-        // 관리자가 삭제했고, 본인 글이 아닐 경우에만 알림 전송
         if (isAdmin && !isAuthor) {
-            User boardAuthor = board.getUser(); // 게시글 작성자
+            User boardAuthor = board.getUser();
             String notificationContent = "회원님의 게시글이 관리자에 의해 삭제되었습니다. 자세한 내용은 고객센터에 문의해주세요.";
             String notificationUrl = "/my-page/posts";
 
             notificationService.send(boardAuthor, notificationContent, notificationUrl);
         }
-
 
         boardRepository.delete(board);
     }
@@ -146,16 +193,12 @@ public class BoardService {
         Optional<BoardLike> boardLike = boardLikeRepository.findByUserAndBoard(user, board);
 
         if (boardLike.isPresent()) {
-            // 이미 눌렀다면 좋아요 취소 (알림 X)
             boardLikeRepository.delete(boardLike.get());
         } else {
-            // 누르지 않았다면 좋아요 추가
             boardLikeRepository.save(new BoardLike(user, board));
 
-            // 게시글 작성자를 가져옵니다.
             User boardAuthor = board.getUser();
 
-            // 자신의 게시글에 좋아요를 누른 경우가 아닐 때만 알림을 보냅니다.
             if (!boardAuthor.getId().equals(userId)) {
                 String notificationContent = user.getNickname() + "님이 회원님의 게시글을 좋아합니다.";
                 String notificationUrl = "/boards/" + boardId;
@@ -181,17 +224,14 @@ public class BoardService {
         }
 
         if (oldCookie != null) {
-            // 기존 쿠키가 있을 경우
             if (!oldCookie.getValue().contains("[" + boardId.toString() + "]")) {
-                // 해당 게시글 조회 기록이 없으면 조회수 올리고, 쿠키에 기록 추가
                 board.increaseView();
                 oldCookie.setValue(oldCookie.getValue() + "_[" + boardId + "]");
                 oldCookie.setPath("/");
-                oldCookie.setMaxAge(60 * 60 * 24); // 쿠키 유효시간: 24시간
+                oldCookie.setMaxAge(60 * 60 * 24);
                 response.addCookie(oldCookie);
             }
         } else {
-            // 기존 쿠키가 없을 경우
             board.increaseView();
             Cookie newCookie = new Cookie("postView", "[" + boardId + "]");
             newCookie.setPath("/");

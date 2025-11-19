@@ -100,4 +100,15 @@ public class BoardController {
 
         return ResponseEntity.ok(Resp.ok("좋아요 성공"));
     }
+
+    @Operation(summary = "내 주변 게시글 조회", description = "주소와 반경(km)을 입력받아 주변 게시글을 찾습니다.")
+    @GetMapping("/api/boards/nearby")
+    public ResponseEntity<Resp<List<BoardResponse>>> findNearbyBoards(
+            @Parameter(description = "내 주소 (예: 서울시청)") @RequestParam String address,
+            @Parameter(description = "검색 반경(km) (기본값: 10km)") @RequestParam(required = false, defaultValue = "10.0") Double radius
+    ) {
+        List<BoardResponse> nearbyBoards = boardService.findNearbyBoards(address, radius);
+
+        return ResponseEntity.ok(Resp.ok(nearbyBoards));
+    }
 }

@@ -18,5 +18,8 @@ public class BoardRequest {
 
     @Schema(description = "게시글 유형", example = "놀거리")
     private BoardType boardType;
+
+    @Schema(description = "주소", example = "서울 강남구 학동로 426")
+    private String address;
 }
 

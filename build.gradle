@@ -81,6 +81,8 @@ dependencies {
 
 	// Spring Batch Test
 	testImplementation 'org.springframework.boot:spring-batch-test'
+
+	implementation 'org.json:json:20231013'
 }
 
 tasks.named('test') {

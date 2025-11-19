@@ -33,6 +33,17 @@ public class Board extends LogEntity {
     @Column(name = "board_view")
     private Long view;
 
+    @Column(name = "address")
+    private String address;
+
+    // 위도
+    @Column(name = "latitude")
+    private Double latitude;
+
+    // 경도
+    @Column(name = "longitude")
+    private Double longitude;
+
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private BoardType boardType;
@@ -85,5 +96,11 @@ public class Board extends LogEntity {
         this.title = title;
         this.content = content;
         this.boardType = boardType;
+    }
+
+    public void updateLocation(String address, Double latitude, Double longitude) {
+        this.address = address;
+        this.latitude = latitude;
+        this.longitude = longitude;
     }
 }
