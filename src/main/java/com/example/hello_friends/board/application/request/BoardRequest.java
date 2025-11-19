@@ -16,7 +16,7 @@ public class BoardRequest {
     @Schema(description = "게시글 내용", example = "내용입니다")
     private String content;
 
-    @Schema(description = "게시글 유형", example = "놀거리")
+    @Schema(description = "게시글 유형", example = "EAT")
     private BoardType boardType;
 
     @Schema(description = "주소", example = "서울 강남구 학동로 426")

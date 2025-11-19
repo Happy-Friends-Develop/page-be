@@ -3,6 +3,7 @@ package com.example.hello_friends.board.presentation;
 import com.example.hello_friends.board.application.request.BoardRequest;
 import com.example.hello_friends.board.application.response.BoardResponse;
 import com.example.hello_friends.board.application.service.BoardService;
+import com.example.hello_friends.board.domain.Board;
 import com.example.hello_friends.board.domain.BoardType;
 import com.example.hello_friends.common.response.Resp;
 import com.example.hello_friends.security.annotation.Auth;
@@ -12,6 +13,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -75,7 +77,7 @@ public class BoardController {
     @PutMapping("/api/user/board/{boardId}")
     public ResponseEntity<Resp<BoardResponse>> updateBoard(
             @PathVariable Long boardId,
-            @RequestBody BoardRequest boardRequest,
+            @RequestBody @Valid BoardRequest boardRequest,
             @Parameter(hidden = true) @Auth JwtPrincipalDto jwtPrincipalDto) {
 
         BoardResponse data = boardService.updateBoard(boardId, boardRequest, jwtPrincipalDto.getId());
