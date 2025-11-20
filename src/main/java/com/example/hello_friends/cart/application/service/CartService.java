@@ -40,15 +40,14 @@ public class CartService {
         Cart cart = cartRepository.findByUserId(userId)
                 .orElseGet(() -> cartRepository.save(new Cart(user)));
 
-        // 장바구니에 이미 동일한 상품이 담겨 있는지 확인합니다.
+        // 장바구니에 이미 동일한 상품이 담겨 있는지 확인
         Optional<CartItem> existingItem = cartItemRepository.findByCartAndSchedule(cart, schedule);
 
         if (existingItem.isPresent()) {
-            // 상품이 이미 존재하면, 수량만 더해줍니다.
             CartItem cartItem = existingItem.get();
             cartItem.addQuantity(cartRequest.getQuantity());
         } else {
-            // 상품이 존재하지 않으면, 새로운 CartItem을 생성하여 장바구니에 추가합니다.
+            // 상품이 존재하지 않으면, 새로운 CartItem을 생성해 장바구니에 추가
             CartItem newItem = new CartItem(cart, schedule, cartRequest.getQuantity());
             cartItemRepository.save(newItem);
         }
