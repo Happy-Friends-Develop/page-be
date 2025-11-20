@@ -1,6 +1,6 @@
 file:
   upload:
-    path: C:/Users/msk03/Desktop/jobAnything/resource/happy-friends/
+    path: ${FILE_PATH}/resource/happy-friends/
     image: images
     video: videos
 
@@ -14,7 +14,7 @@ feature:
     enabled: false
 spring:
   datasource:
-    url: jdbc:mariadb://localhost:3306/friend
+    url: ${MARIADB}
     username: root
     password: 1234
   jpa:
@@ -25,4 +25,4 @@ logging:
   level:
     root: INFO # 로그 레벨을 최소화
 server:
-  port: 8080 # 운영 서버 포트
+  port: ${PORT} # 운영 서버 포트
