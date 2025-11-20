@@ -23,12 +23,34 @@ public class BoardFileResponse {
     }
 
     public static BoardFileResponse from(BoardFile boardFile) {
+        // 윈도우 경로(\)를 웹 표준 경로(/)로 수정
+        String storedPath = boardFile.getFilePath().replace("\\", "/");
+
+        // 파일 종류에 따라 문패(Prefix) 다르게 달기
+        String urlPrefix = "";
+
+        if (boardFile.getFileType() == FileType.IMAGE) {
+            urlPrefix = "/images/";
+        } else if (boardFile.getFileType() == FileType.VIDEO) {
+            urlPrefix = "/videos/";
+        }
+
+        // 최종 주소
+        String publicUrl = urlPrefix + storedPath;
+
+        // 썸네일 주소 처리 - 동영상만
+        String thumbnailPublicUrl = null;
+        if (boardFile.getThumbnailPath() != null) {
+            String thumbPath = boardFile.getThumbnailPath().replace("\\", "/");
+            thumbnailPublicUrl = "/images/" + thumbPath;
+        }
+
         return BoardFileResponse.builder()
                 .id(boardFile.getId())
                 .originalName(boardFile.getOriginalName())
-                .filePath(boardFile.getFilePath())
+                .filePath(publicUrl)
                 .fileType(boardFile.getFileType())
-                .thumbnailPath(boardFile.getThumbnailPath())
+                .thumbnailPath(thumbnailPublicUrl)
                 .build();
     }
 }
