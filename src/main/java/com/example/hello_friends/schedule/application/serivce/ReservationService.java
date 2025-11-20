@@ -10,6 +10,7 @@ import com.example.hello_friends.schedule.application.response.ReservationRespon
 import com.example.hello_friends.schedule.domain.*;
 import com.example.hello_friends.user.domain.User;
 import com.example.hello_friends.user.domain.UserRepository;
+import com.example.hello_friends.user.domain.UserRole;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -93,20 +94,48 @@ public class ReservationService {
     // 판매자나 관리자가 예약 강제 취소
     @Transactional
     @PreAuthorize("hasAnyRole('ROLE_SELLER', 'ROLE_ADMIN')")
-    public void forceCancelReservation(Long userId, Long reservationId) {
+    public void forceCancelReservation(Long requesterId, Long reservationId) {
         Reservation reservation = reservationRepository.findById(reservationId)
                 .orElseThrow(() -> new ReservationNotFoundException("존재하지 않는 예약입니다. ID : " + reservationId));
+
+        // 관리자가 아닌 경우 판매자가 등록한건지 확인
+        User requester = userRepository.findById(requesterId)
+                .orElseThrow(() -> new UserNotFoundException("관리자/판매자 정보를 찾을 수 없습니다."));
+
+        // 예약 -> 스케줄 -> 게시글 -> 게시글 작성자(판매자)
+        User seller = reservation.getSchedule().getBoard().getUser();
+
+        // 관리자 및 판매자 검토
+        boolean isAdmin = requester.getUserRole() == UserRole.ADMIN;
+        boolean isOwner = seller.getId().equals(requesterId);
+
+        if (!isAdmin && !isOwner) {
+            throw new NoAuthorityException("해당 예약을 취소할 권한이 없습니다.");
+        }
 
         User customer = reservation.getUser();
 
         String scheduleName = reservation.getSchedule().getBoard().getTitle();
-        String notificationContent = String.format("%s 예약이 판매자 사정으로 취소되었습니다.", scheduleName);
+        String notificationContent = String.format("['%s'] 예약이 업체 사정으로 취소되었습니다.", scheduleName);
 
+        // 알림 전송
         notificationService.send(customer, notificationContent);
 
+        // 스케줄 인원 복구
         Schedule schedule = reservation.getSchedule();
         schedule.cancelReservation(reservation.getQuantity());
 
+        // 예약 취소 상태 변경
         reservation.cancel();
+    }
+
+    // 모든 보드별 예약 조회 (관리자 전용)
+    @Transactional(readOnly = true)
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN')")
+    public List<ReservationResponse> getAllReservationWithBoard() {
+        List<Reservation> reservations = reservationRepository.findAllByStatusWithDetails(ReservationStatus.RESERVED);
+        return reservations.stream()
+                .map(ReservationResponse::from)
+                .collect(Collectors.toList());
     }
 }

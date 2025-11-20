@@ -18,9 +18,10 @@ public class ReservationResponse {
     private final BigDecimal totalPrice;
     private final LocalDateTime reservationDate;
     private final ReservationStatus reservationStatus;
+    private final String userNickname;
 
     @Builder
-    private ReservationResponse(Long reservationId, String boardTitle, LocalDate scheduleDate, int quantity, BigDecimal totalPrice, LocalDateTime reservationDate, ReservationStatus reservationStatus) {
+    private ReservationResponse(Long reservationId, String boardTitle, LocalDate scheduleDate, int quantity, BigDecimal totalPrice, LocalDateTime reservationDate, ReservationStatus reservationStatus, String userNickname) {
         this.reservationId = reservationId;
         this.boardTitle = boardTitle;
         this.scheduleDate = scheduleDate;
@@ -28,6 +29,7 @@ public class ReservationResponse {
         this.totalPrice = totalPrice;
         this.reservationDate = reservationDate;
         this.reservationStatus = reservationStatus;
+        this.userNickname = userNickname;
     }
 
     public static ReservationResponse from(Reservation reservation) {
@@ -42,6 +44,7 @@ public class ReservationResponse {
                 .totalPrice(unitPrice.multiply(new BigDecimal(quantity)))
                 .reservationDate(reservation.getCreatedAt())
                 .reservationStatus(reservation.getStatus())
+                .userNickname(reservation.getUser().getNickname())
                 .build();
     }
 }

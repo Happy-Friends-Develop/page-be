@@ -61,4 +61,13 @@ public class ReservationController {
 
         return ResponseEntity.ok(Resp.ok("관리자 권한으로 예약이 취소되었습니다."));
     }
+
+    @Operation(summary = "전체 예약 조회 (관리자용)", description = "서비스 내의 모든 진행중인 예약 내역을 조회합니다.")
+    @GetMapping("/api/admin/reservations")
+    public ResponseEntity<Resp<List<ReservationResponse>>> getAllReservations(
+            @Parameter(hidden = true) @Auth JwtPrincipalDto jwtPrincipalDto
+    ) {
+        List<ReservationResponse> allReservations = reservationService.getAllReservationWithBoard();
+        return ResponseEntity.ok(Resp.ok(allReservations));
+    }
 }
