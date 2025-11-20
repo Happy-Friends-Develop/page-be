@@ -30,7 +30,7 @@ public class CartController {
     }
 
     @Operation(summary = "내 장바구니 조회", description = "현재 로그인한 사용자의 장바구니에 담긴 모든 아이템 목록을 조회합니다.")
-    @GetMapping("/api/user/cartlist")
+    @GetMapping("/api/user/cartList")
     public ResponseEntity<Resp<CartResponse>> getMyCart(
             @Parameter(hidden = true) @Auth JwtPrincipalDto jwtPrincipalDto
     ) {
