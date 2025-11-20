@@ -1,6 +1,7 @@
 package com.example.hello_friends.schedule.application.response;
 
 import com.example.hello_friends.schedule.domain.Reservation;
+import com.example.hello_friends.schedule.domain.ReservationStatus;
 import lombok.Builder;
 import lombok.Data;
 
@@ -16,15 +17,17 @@ public class ReservationResponse {
     private final int quantity;
     private final BigDecimal totalPrice;
     private final LocalDateTime reservationDate;
+    private final ReservationStatus reservationStatus;
 
     @Builder
-    private ReservationResponse(Long reservationId, String boardTitle, LocalDate scheduleDate, int quantity, BigDecimal totalPrice, LocalDateTime reservationDate) {
+    private ReservationResponse(Long reservationId, String boardTitle, LocalDate scheduleDate, int quantity, BigDecimal totalPrice, LocalDateTime reservationDate, ReservationStatus reservationStatus) {
         this.reservationId = reservationId;
         this.boardTitle = boardTitle;
         this.scheduleDate = scheduleDate;
         this.quantity = quantity;
         this.totalPrice = totalPrice;
         this.reservationDate = reservationDate;
+        this.reservationStatus = reservationStatus;
     }
 
     public static ReservationResponse from(Reservation reservation) {
@@ -38,6 +41,7 @@ public class ReservationResponse {
                 .quantity(quantity)
                 .totalPrice(unitPrice.multiply(new BigDecimal(quantity)))
                 .reservationDate(reservation.getCreatedAt())
+                .reservationStatus(reservation.getStatus())
                 .build();
     }
 }
