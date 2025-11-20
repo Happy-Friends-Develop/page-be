@@ -6,7 +6,7 @@ file:
 
 kakao:
   api:
-    key: ${KAKAO_KEY}
+    map: ${KAKAO_KEY}
 
 feature:
   my-service:

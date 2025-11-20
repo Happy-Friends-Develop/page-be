@@ -15,7 +15,7 @@ import java.util.Map;
 
 @Service
 public class GeocodingService {
-    @Value("${kakao.api.key}")
+    @Value("${kakao.api.map}")
     private String apiKey;
 
     private final String API_URL = "https://dapi.kakao.com/v2/local/search/address.json?query=";
