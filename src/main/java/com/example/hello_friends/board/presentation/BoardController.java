@@ -31,19 +31,11 @@ public class BoardController {
     @Operation(summary = "게시판 추가", description = "게시판을 추가합니다. 파일 업로드도 가능합니다.")
     @PostMapping(value = "/api/user/board", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Resp<BoardResponse>> createBoard(
-            @Parameter(description = "게시글 제목") @RequestParam String title,
-            @Parameter(description = "게시글 내용") @RequestParam String content,
+            @Parameter(description = "게시글 정보(JSON)") @RequestPart(value = "boardRequest") @Valid BoardRequest boardRequest,
             @Parameter(description = "첨부 파일들") @RequestPart(value = "files", required = false) List<MultipartFile> files,
-            @Parameter(description = "게시글 타입") @RequestParam  BoardType boardType,
             @Parameter(hidden = true) @Auth JwtPrincipalDto jwtPrincipalDto
     ) {
-        BoardRequest boardRequest = BoardRequest.builder()
-                .title(title)
-                .content(content)
-                .boardType(boardType)
-                .build();
-
-        BoardResponse data = boardService.createBoard(boardRequest, files, jwtPrincipalDto.getId(), boardType);
+        BoardResponse data = boardService.createBoard(boardRequest, files, jwtPrincipalDto.getId());
 
         return ResponseEntity.ok(Resp.ok(data));
     }
