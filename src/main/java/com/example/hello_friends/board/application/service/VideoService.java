@@ -4,7 +4,9 @@ import com.example.hello_friends.board.domain.BoardFile;
 import com.example.hello_friends.board.domain.BoardFileRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,17 +33,25 @@ public class VideoService {
     @Value("${file.upload.video}")
     private String videoPath;
 
-    private final BoardFileRepository boardFileRepository; // DB 작업을 위해 Repository 주입
+    private final BoardFileRepository boardFileRepository;
 
-    // 동영상 업로드 요청을 받고 파일을 저장한 뒤, 즉시 사용자에게 응답.
+    // 비동기(@Async)가 같은 클래스 내에서 작동하도록 자기 자신을 주입
+    // 순환 참조 방지를 위해 @Lazy를 꼭 붙여야 해요.
+    @Autowired
+    @Lazy
+    private VideoService self;
+
+    // 동영상 저장 후 비동기 처리 요청
     @Transactional
     public BoardFile uploadVideoAndRequestProcessing(MultipartFile file, String mimeType, Integer sortOrder) {
         try {
             String originalFilename = file.getOriginalFilename();
             String storedFilename = UUID.randomUUID() + getFileExtension(originalFilename);
             String datePath = createDatePath();
+
             Path fullDirPath = Paths.get(uploadPath, videoPath, datePath);
             Files.createDirectories(fullDirPath);
+
             Path destPath = fullDirPath.resolve(storedFilename);
             file.transferTo(destPath);
 
@@ -55,7 +65,8 @@ public class VideoService {
             );
             boardFileRepository.save(boardFile);
 
-            processVideoFile(boardFile.getId(), fullDirPath.toString(), storedFilename);
+            // 사용자가 기다리지 않고 바로 응답받기 가능
+            self.processVideoFile(boardFile.getId(), fullDirPath.toString(), storedFilename);
 
             return boardFile;
 
@@ -65,24 +76,27 @@ public class VideoService {
         }
     }
 
-    // 2단계 (비동기): 시간이 오래 걸리는 썸네일 생성 및 길이 추출 작업을 배경에서 처리.
+    // 썸네일 및 길이 추출
     @Async
     @Transactional
     public void processVideoFile(Long fileId, String dirPath, String storedFilename) {
         log.info("비동기 비디오 처리 시작: fileId={}", fileId);
-        String relativeDatePath = createDatePath(); // 상대 경로를 일관되게 사용하기 위해
+        String relativeDatePath = createDatePath();
+
         try {
             Path videoFullPath = Paths.get(dirPath, storedFilename);
 
             // 썸네일 생성
             String thumbnailName = "thumb_" + storedFilename.substring(0, storedFilename.lastIndexOf(".")) + ".jpg";
             String thumbnailRelativePath = Paths.get(relativeDatePath, thumbnailName).toString();
+
+            // 썸네일 만들기 (오래 걸림)
             generateThumbnail(dirPath, storedFilename, thumbnailName);
 
-            // 동영상 길이 추출
+            // 길이 추출하기
             Integer duration = extractDuration(videoFullPath.toString());
 
-            // DB에서 다시 파일 정보를 가져와서 업데이트
+            // DB 업데이트
             BoardFile boardFile = boardFileRepository.findById(fileId)
                     .orElseThrow(() -> new RuntimeException("비디오 처리 중 파일을 찾을 수 없음: " + fileId));
 
@@ -91,34 +105,37 @@ public class VideoService {
 
         } catch (Exception e) {
             log.error("비동기 비디오 처리 실패: fileId={}, error={}", fileId, e.getMessage());
-
+            // 실패 시 DB에 실패 사유 기록
             boardFileRepository.findById(fileId).ifPresent(bf -> {
                 bf.processingFailed(e.getMessage());
             });
         }
     }
 
+    // 썸네일 생성 - 무한 대기 해결 (inheritIO 사용)
     private void generateThumbnail(String dirPath, String inputFilename, String outputThumbnailName) throws IOException, InterruptedException {
         Path inputPath = Paths.get(dirPath, inputFilename);
         Path outputPath = Paths.get(dirPath, outputThumbnailName);
 
+        // FFmpeg 명령어: 1초 지점(-ss 00:00:01)에서 사진 1장(-vframes 1)을 찍어라
         ProcessBuilder pb = new ProcessBuilder(
                 "ffmpeg", "-i", inputPath.toString(),
                 "-ss", "00:00:01", "-vframes", "1", "-s", "320x240",
                 outputPath.toString()
         );
-        pb.redirectErrorStream(true);
+
+        // FFmpeg의 로그를 자바 콘솔로 바로 연결해서 버퍼가 꽉차는것 방지
+        pb.inheritIO();
 
         Process process = pb.start();
-        process.waitFor();
+        int exitCode = process.waitFor();
 
-        if (process.exitValue() != 0) {
-            String errorMessage = new BufferedReader(new InputStreamReader(process.getInputStream()))
-                    .lines().collect(Collectors.joining("\n"));
-            throw new RuntimeException("썸네일 생성 실패. FFmpeg 오류: " + errorMessage);
+        if (exitCode != 0) {
+            throw new RuntimeException("썸네일 생성 실패 (FFmpeg 에러)");
         }
     }
 
+    // 길이 추출 - 결과값 읽기
     private Integer extractDuration(String videoPath) throws IOException, InterruptedException {
         ProcessBuilder pb = new ProcessBuilder(
                 "ffprobe",
@@ -129,21 +146,23 @@ public class VideoService {
         );
 
         Process process = pb.start();
-        BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-        String durationStr = reader.readLine();
-        process.waitFor();
 
-        if (process.exitValue() != 0) {
-            String errorMessage = new BufferedReader(new InputStreamReader(process.getErrorStream()))
-                    .lines().collect(Collectors.joining("\n"));
-            throw new RuntimeException("동영상 길이 추출 실패. FFprobe 오류: " + errorMessage);
+        // 결과를 읽어와야 하므로 BufferedReader 사용
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+            String durationStr = reader.readLine();
+
+            process.waitFor();
+
+            if (process.exitValue() != 0) {
+                throw new RuntimeException("동영상 길이 추출 실패 (FFprobe 에러)");
+            }
+
+            if (durationStr == null || durationStr.trim().isEmpty()) {
+                return 0;
+            }
+
+            return (int) Math.round(Double.parseDouble(durationStr));
         }
-
-        if (durationStr == null || durationStr.trim().isEmpty()) {
-            throw new RuntimeException("동영상 길이를 추출할 수 없음. FFprobe 출력값이 비어있음.");
-        }
-
-        return (int) Math.round(Double.parseDouble(durationStr));
     }
 
     private String getFileExtension(String filename) {
