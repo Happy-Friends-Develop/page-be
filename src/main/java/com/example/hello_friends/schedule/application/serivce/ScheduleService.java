@@ -5,12 +5,16 @@ import com.example.hello_friends.board.domain.BoardRepository;
 import com.example.hello_friends.common.exception.BoardNotFoundException;
 import com.example.hello_friends.common.exception.NoAuthorityException;
 import com.example.hello_friends.common.exception.ScheduleNotFoundException;
+import com.example.hello_friends.common.exception.UserNotFoundException;
 import com.example.hello_friends.common.response.MotherException;
 import com.example.hello_friends.schedule.application.request.ScheduleRequest;
 import com.example.hello_friends.schedule.application.request.ScheduleUpdateRequest;
 import com.example.hello_friends.schedule.application.response.ScheduleResponse;
 import com.example.hello_friends.schedule.domain.Schedule;
 import com.example.hello_friends.schedule.domain.ScheduleRepository;
+import com.example.hello_friends.user.domain.User;
+import com.example.hello_friends.user.domain.UserRepository;
+import com.example.hello_friends.user.domain.UserRole;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -25,13 +29,25 @@ import java.util.stream.Collectors;
 public class ScheduleService {
     private final ScheduleRepository scheduleRepository;
     private final BoardRepository boardRepository;
+    private final UserRepository userRepository;
 
     // 게시글에 스케줄 추가
     @Transactional
     @PreAuthorize("hasAnyRole('ROLE_SELLER', 'ROLE_ADMIN')")
-    public void addSchedulesToBoard(Long boardId, List<ScheduleRequest> requests) {
+    public void addSchedulesToBoard(Long boardId, List<ScheduleRequest> requests, Long userId) {
         Board board = boardRepository.findById(boardId)
-                .orElseThrow(() -> new BoardNotFoundException("게시글을 찾을 수 없습니다. ID : "+boardId));
+                .orElseThrow(() -> new BoardNotFoundException("게시글을 찾을 수 없습니다. ID : " + boardId));
+
+        User currentUser = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("사용자를 찾을 수 없습니다. ID : " + userId));
+
+        // 관리자와 자기가 작성한 글인지 검토
+        boolean isAdmin = currentUser.getUserRole() == UserRole.ADMIN;
+        boolean isOwner = board.getUser().getId().equals(userId);
+
+        if (!isAdmin && !isOwner) {
+            throw new NoAuthorityException("본인이 작성한 게시글에만 스케줄을 등록할 수 있습니다.");
+        }
 
         List<Schedule> schedules = requests.stream()
                 .map(request -> new Schedule(
@@ -60,7 +76,7 @@ public class ScheduleService {
     @PreAuthorize("hasAnyRole('ROLE_SELLER', 'ROLE_ADMIN')")
     public void updateSchedule(Long boardId, Long scheduleId, Long sellerId, ScheduleUpdateRequest request) {
         Schedule schedule = scheduleRepository.findById(scheduleId)
-                .orElseThrow(() -> new ScheduleNotFoundException("스케줄을 찾을 수 없습니다. ID :"+scheduleId));
+                .orElseThrow(() -> new ScheduleNotFoundException("스케줄을 찾을 수 없습니다. ID :" + scheduleId));
 
         // 권한 검증
         if (!schedule.getBoard().getId().equals(boardId) || !schedule.getBoard().getUser().getId().equals(sellerId)) {

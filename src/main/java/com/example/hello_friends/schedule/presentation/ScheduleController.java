@@ -38,7 +38,7 @@ public class ScheduleController {
             @RequestBody List<ScheduleRequest> requests,
             @Parameter(hidden = true) @Auth JwtPrincipalDto jwtPrincipalDto
     ) {
-        scheduleService.addSchedulesToBoard(boardId, requests);
+        scheduleService.addSchedulesToBoard(boardId, requests, jwtPrincipalDto.getId());
         return ResponseEntity.ok(Resp.ok("스케줄이 성공적으로 추가되었습니다."));
     }
 
