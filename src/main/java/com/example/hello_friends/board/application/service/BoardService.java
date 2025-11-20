@@ -87,7 +87,7 @@ public class BoardService {
         Board board = boardRepository.findById(id)
                 .orElseThrow(() -> new BoardNotFoundException("해당 게시글이 없습니다. id=" + id));
 
-        return BoardResponse.from(board);
+        return BoardResponse.fromDetail(board);
     }
 
     // 게시글 목록 조회

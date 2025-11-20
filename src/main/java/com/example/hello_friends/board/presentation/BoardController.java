@@ -3,11 +3,12 @@ package com.example.hello_friends.board.presentation;
 import com.example.hello_friends.board.application.request.BoardRequest;
 import com.example.hello_friends.board.application.response.BoardResponse;
 import com.example.hello_friends.board.application.service.BoardService;
-import com.example.hello_friends.board.domain.Board;
 import com.example.hello_friends.board.domain.BoardType;
 import com.example.hello_friends.common.response.Resp;
 import com.example.hello_friends.security.annotation.Auth;
 import com.example.hello_friends.security.filter.JwtPrincipalDto;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -27,14 +28,21 @@ import java.util.List;
 @Tag(name = "게시글")
 public class BoardController {
     private final BoardService boardService;
+    private final ObjectMapper objectMapper;
 
     @Operation(summary = "게시판 추가", description = "게시판을 추가합니다. 파일 업로드도 가능합니다.")
     @PostMapping(value = "/api/user/board", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Resp<BoardResponse>> createBoard(
-            @Parameter(description = "게시글 정보(JSON)") @RequestPart(value = "boardRequest") @Valid BoardRequest boardRequest,
-            @Parameter(description = "첨부 파일들") @RequestPart(value = "files", required = false) List<MultipartFile> files,
+            @Parameter(description = "게시글 정보(JSON)")
+            @RequestPart(value = "boardRequest") String boardRequestStr,
+
+            @Parameter(description = "첨부 파일들")
+            @RequestPart(value = "files", required = false) List<MultipartFile> files,
+
             @Parameter(hidden = true) @Auth JwtPrincipalDto jwtPrincipalDto
-    ) {
+    ) throws JsonProcessingException {
+
+        BoardRequest boardRequest = objectMapper.readValue(boardRequestStr, BoardRequest.class);
         BoardResponse data = boardService.createBoard(boardRequest, files, jwtPrincipalDto.getId());
 
         return ResponseEntity.ok(Resp.ok(data));
@@ -98,7 +106,7 @@ public class BoardController {
     }
 
     @Operation(summary = "내 주변 게시글 조회", description = "주소와 반경(km)을 입력받아 주변 게시글을 찾습니다.")
-    @GetMapping("/api/boards/nearby")
+    @GetMapping("/api/user/boards/nearby")
     public ResponseEntity<Resp<List<BoardResponse>>> findNearbyBoards(
             @Parameter(description = "내 주소 (예: 서울시청)") @RequestParam String address,
             @Parameter(description = "검색 반경(km) (기본값: 10km)") @RequestParam(required = false, defaultValue = "10.0") Double radius
