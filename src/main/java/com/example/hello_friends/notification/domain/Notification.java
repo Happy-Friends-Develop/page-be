@@ -39,4 +39,8 @@ public class Notification extends LogEntity {
         this.url = url;
         this.isRead = isRead;
     }
+
+    public void read() {
+        this.isRead = true;
+    }
 }
