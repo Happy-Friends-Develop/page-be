@@ -109,11 +109,19 @@ public class Board extends LogEntity {
 
     // 찜하기
     public void increaseWishlistCount() {
+        // null이면 0으로 초기화
+        if (this.wishListCount == null) {
+            this.wishListCount = 0L;
+        }
         this.wishListCount++;
     }
 
     // 찜 취소
     public void decreaseWishlistCount() {
+        // null이면 0으로 초기화
+        if (this.wishListCount == null) {
+            this.wishListCount = 0L;
+        }
         if (this.wishListCount > 0) {
             this.wishListCount--;
         }
