@@ -33,7 +33,8 @@ public class ReservationService {
     public ReservationResponse createReservation(Long userId, ReservationRequest reservationRequest) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("사용자를 찾을 수 없습니다. ID : " + userId));
-        Schedule schedule = scheduleRepository.findById(reservationRequest.getScheduleId())
+        // 동시 예약 방지 findByIdWithLock
+        Schedule schedule = scheduleRepository.findByIdWithLock(reservationRequest.getScheduleId())
                 .orElseThrow(() -> new ReservationNotFoundException("예약할 스케줄을 찾을 수 없습니다. ID : " + reservationRequest.getScheduleId()));
 
         if (schedule.isFull(reservationRequest.getQuantity())) {
@@ -61,6 +62,9 @@ public class ReservationService {
         if (!reservation.getUser().getId().equals(userId)) {
             throw new NoAuthorityException("예약을 취소할 권한이 없습니다.");
         }
+
+        // 취소된 예약인지 검증
+        reservation.validatePossibleToCancel();
 
         Schedule schedule = reservation.getSchedule();
         schedule.cancelReservation(reservation.getQuantity());
@@ -101,6 +105,9 @@ public class ReservationService {
         // 관리자가 아닌 경우 판매자가 등록한건지 확인
         User requester = userRepository.findById(requesterId)
                 .orElseThrow(() -> new UserNotFoundException("관리자/판매자 정보를 찾을 수 없습니다."));
+
+        // 취소된 예약인지 검증
+        reservation.validatePossibleToCancel();
 
         // 예약 -> 스케줄 -> 게시글 -> 게시글 작성자(판매자)
         User seller = reservation.getSchedule().getBoard().getUser();
