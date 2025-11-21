@@ -37,7 +37,7 @@ public class QueueService {
             // 참가열로 이동
             redisTemplate.opsForSet().add(ACTIVE_KEY, users.toArray(new String[0]));
             // 대기열에서 삭제
-            redisTemplate.opsForZSet().remove(WAITING_KEY, users.toArray(new String[0]));
+            redisTemplate.opsForZSet().remove(WAITING_KEY, users.toArray());
         }
     }
 
