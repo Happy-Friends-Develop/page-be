@@ -1,6 +1,8 @@
 package com.example.hello_friends.schedule.presentation;
 
+import com.example.hello_friends.common.response.MotherException;
 import com.example.hello_friends.common.response.Resp;
+import com.example.hello_friends.redis.application.QueueService;
 import com.example.hello_friends.schedule.application.request.ReservationRequest;
 import com.example.hello_friends.schedule.application.response.ReservationResponse;
 import com.example.hello_friends.schedule.application.serivce.ReservationService;
@@ -10,6 +12,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,6 +23,7 @@ import java.util.List;
 @Tag(name = "예약 관리")
 public class ReservationController {
     private final ReservationService reservationService;
+    private final QueueService queueService;
 
     @Operation(summary = "예약하기", description = "특정 스케줄(날짜 옵션)을 지정된 인원수만큼 예약합니다.")
     @PostMapping("/api/user/reservation")
@@ -27,8 +31,25 @@ public class ReservationController {
             @Parameter(hidden = true) @Auth JwtPrincipalDto jwtPrincipalDto,
             @RequestBody ReservationRequest reservationRequest
     ) {
-        ReservationResponse reservationResponse = reservationService.createReservation(jwtPrincipalDto.getId(), reservationRequest);
-        return ResponseEntity.ok(Resp.ok(reservationResponse));
+        String userIdStr = String.valueOf(jwtPrincipalDto.getId());
+
+        // 입장 권한 확인 (DB 연결 전)
+        if (!queueService.isAllowed(userIdStr)) {
+            // 내 순서가 아니면 대기열에 등록하고 돌려보냄
+            queueService.registerQueue(userIdStr);
+            Long rank = queueService.getRank(userIdStr);
+            throw new MotherException("대기 중입니다. 순번: " + (rank + 1), HttpStatus.TOO_MANY_REQUESTS);
+        }
+
+        // 권한이 있는 50명만 여기서부터 실행
+        try {
+            ReservationResponse reservationResponse = reservationService.createReservation(jwtPrincipalDto.getId(), reservationRequest);
+            return ResponseEntity.ok(Resp.ok(reservationResponse));
+
+        } finally {
+            // 대기역에서 삭제
+            queueService.removeUser(userIdStr);
+        }
     }
 
     @Operation(summary = "내 예약 목록 조회", description = "옵션에 따라 전체, 예약중, 취소된 내역을 조회합니다. (type: ALL, RESERVED, CANCELED)")
