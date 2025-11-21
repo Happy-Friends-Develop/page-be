@@ -13,6 +13,10 @@ feature:
   my-service:
     enabled: false
 spring:
+  data:
+    redis:
+      host: localhost
+      port: 6379
   datasource:
     url: ${MARIADB}
     username: root

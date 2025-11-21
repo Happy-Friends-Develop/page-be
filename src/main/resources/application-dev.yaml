@@ -10,6 +10,10 @@ kakao:
     map: ${KAKAO_MAP_KEY}
 
 spring:
+  data:
+    redis:
+      host: localhost
+      port: 6379
   datasource:
     url: ${MARIADB}
     username: root
