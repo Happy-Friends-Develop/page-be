@@ -24,6 +24,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -205,6 +206,16 @@ public class BoardService {
                 notificationService.send(boardAuthor, notificationContent, notificationUrl);
             }
         }
+    }
+
+    // 좋아요 한 게시글 목록 확인
+    @Transactional(readOnly = true)
+    public List<BoardResponse> likeList(Long userId) {
+        List<BoardLike> boardLikeList = boardLikeRepository.findAllByUserId(userId);
+
+        return boardLikeList.stream()
+                .map(boardLike -> BoardResponse.from(boardLike.getBoard()))
+                .collect(Collectors.toList());
     }
 
     // 조회수 상승

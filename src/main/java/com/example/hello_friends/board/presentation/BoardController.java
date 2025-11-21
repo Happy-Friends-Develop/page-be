@@ -62,6 +62,15 @@ public class BoardController {
         return ResponseEntity.ok(Resp.ok(data));
     }
 
+    @Operation(summary = "좋아요 한 게시글 목록 확인", description = "좋아요 한 게시글 목록을 확인합니다.")
+    @GetMapping("/api/user/boardLikes")
+    public ResponseEntity<Resp<List<BoardResponse>>> readBoardLikeList(
+            @Parameter(hidden = true) @Auth JwtPrincipalDto jwtPrincipalDto){
+        List<BoardResponse> boardLikeList = boardService.likeList(jwtPrincipalDto.getId());
+
+        return ResponseEntity.ok(Resp.ok(boardLikeList));
+    }
+
     @Operation(summary = "게시글 목록 조회", description = "모든 게시글 목록을 조회합니다.")
     @GetMapping("/api/user/board")
     public ResponseEntity<Resp<List<BoardResponse>>> readBoardList(
