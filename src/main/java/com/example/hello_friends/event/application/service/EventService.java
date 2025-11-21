@@ -83,7 +83,7 @@ public class EventService {
     public void joinEvent(Long eventId, Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("사용자를 찾을 수 없습니다. ID : " + userId));
-        Event event = eventRepository.findById(eventId)
+        Event event = eventRepository.findByIdWithLock(eventId)
                 .orElseThrow(() -> new EventNotFoundException("이벤트를 찾을 수 없습니다. ID : " + eventId));
 
         if (event.getEventType() == EventType.NOTICE) {
