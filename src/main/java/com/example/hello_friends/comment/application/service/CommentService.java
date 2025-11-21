@@ -3,6 +3,7 @@ package com.example.hello_friends.comment.application.service;
 import com.example.hello_friends.board.domain.Board;
 import com.example.hello_friends.board.domain.BoardRepository;
 import com.example.hello_friends.comment.application.response.CommentResponse;
+import com.example.hello_friends.comment.application.response.MyCommentResponse;
 import com.example.hello_friends.comment.domain.Comment;
 import com.example.hello_friends.comment.domain.CommentRepository;
 import com.example.hello_friends.common.exception.*;
@@ -20,6 +21,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -156,4 +158,15 @@ public class CommentService {
 
         return topLevelComments;
     }
+
+    // 내가 작성한 댓글 목록 조회
+    @Transactional(readOnly = true)
+    public List<MyCommentResponse> getMyCommentList(Long userId) {
+        List<Comment> comments = commentRepository.findAllByUserId(userId);
+
+        return comments.stream()
+                .map(MyCommentResponse::new)
+                .collect(Collectors.toList());
+    }
+
 }

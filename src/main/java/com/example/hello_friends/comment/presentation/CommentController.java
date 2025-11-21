@@ -2,6 +2,7 @@ package com.example.hello_friends.comment.presentation;
 
 import com.example.hello_friends.comment.application.request.CommentRequest;
 import com.example.hello_friends.comment.application.response.CommentResponse;
+import com.example.hello_friends.comment.application.response.MyCommentResponse;
 import com.example.hello_friends.comment.application.service.CommentService;
 import com.example.hello_friends.comment.domain.Comment;
 import com.example.hello_friends.common.response.Resp;
@@ -65,5 +66,14 @@ public class CommentController {
     public ResponseEntity<Resp<String>> deleteComment(@PathVariable Long commentId, @Parameter(hidden = true) @Auth JwtPrincipalDto jwtPrincipalDto) {
         commentService.deleteComment(commentId, jwtPrincipalDto.getId());
         return ResponseEntity.ok(Resp.ok("댓글 삭제 성공"));
+    }
+
+    @Operation(summary = "내가 쓴 댓글 목록", description = "내가 작성한 댓글들을 최신순으로 조회합니다.")
+    @GetMapping("/api/user/comments")
+    public ResponseEntity<Resp<List<MyCommentResponse>>> getMyComments(
+            @Parameter(hidden = true) @Auth JwtPrincipalDto jwtPrincipalDto
+    ) {
+        List<MyCommentResponse> response = commentService.getMyCommentList(jwtPrincipalDto.getId());
+        return ResponseEntity.ok(Resp.ok(response));
     }
 }
