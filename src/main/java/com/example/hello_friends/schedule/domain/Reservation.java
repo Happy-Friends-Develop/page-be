@@ -1,10 +1,12 @@
 package com.example.hello_friends.schedule.domain;
 
 import com.example.hello_friends.common.entity.LogEntity;
+import com.example.hello_friends.common.response.MotherException;
 import com.example.hello_friends.user.domain.User;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.springframework.http.HttpStatus;
 
 @Entity
 @Getter
@@ -38,5 +40,11 @@ public class Reservation extends LogEntity {
 
     public void cancel() {
         this.status = ReservationStatus.CANCELED;
+    }
+
+    public void validatePossibleToCancel() {
+        if (this.status == ReservationStatus.CANCELED) {
+            throw new MotherException("이미 취소된 예약입니다.", HttpStatus.BAD_REQUEST);
+        }
     }
 }
