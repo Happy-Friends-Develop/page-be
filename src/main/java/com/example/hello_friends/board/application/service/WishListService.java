@@ -3,7 +3,7 @@ package com.example.hello_friends.board.application.service;
 import com.example.hello_friends.board.application.response.WishListResponse;
 import com.example.hello_friends.board.domain.Board;
 import com.example.hello_friends.board.domain.BoardRepository;
-import com.example.hello_friends.board.domain.WishLIstRepository;
+import com.example.hello_friends.board.domain.WishListRepository;
 import com.example.hello_friends.board.domain.WishList;
 import com.example.hello_friends.board.infra.GeocodingService;
 import com.example.hello_friends.common.exception.BoardNotFoundException;
@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class WishListService {
-    private final WishLIstRepository wishLIstRepository;
+    private final WishListRepository wishLIstRepository;
     private final UserRepository userRepository;
     private final BoardRepository boardRepository;
     private final GeocodingService geocodingService;

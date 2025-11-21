@@ -4,16 +4,18 @@ import com.example.hello_friends.user.domain.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
 
-public interface WishLIstRepository extends JpaRepository<WishList, Long> {
+@Repository
+public interface WishListRepository extends JpaRepository<WishList, Long> {
     // 사용자와 게시글로 찜 내역 찾기
     Optional<WishList> findByUserAndBoard(User user, Board board);
 
     // 내가 찜한 목록 확인
-    @Query("select w from Wishlist w join fetch w.board where w.user.id = :userId")
+    @Query("select w from WishList w join fetch w.board where w.user.id = :userId")
     List<WishList> findAllByUserId(@Param("userId") Long userId);
 
     // 내 찜 목록 중에서 + 특정 위치 반경 N km 이내인 것만 조회
