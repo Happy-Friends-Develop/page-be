@@ -44,6 +44,9 @@ public class Board extends LogEntity {
     @Column(name = "longitude")
     private Double longitude;
 
+    @Column(name = "wishlist_count")
+    private Long wishListCount = 0L;
+
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private BoardType boardType;
@@ -102,5 +105,17 @@ public class Board extends LogEntity {
         this.address = address;
         this.latitude = latitude;
         this.longitude = longitude;
+    }
+
+    // 찜하기
+    public void increaseWishlistCount() {
+        this.wishListCount++;
+    }
+
+    // 찜 취소
+    public void decreaseWishlistCount() {
+        if (this.wishListCount > 0) {
+            this.wishListCount--;
+        }
     }
 }

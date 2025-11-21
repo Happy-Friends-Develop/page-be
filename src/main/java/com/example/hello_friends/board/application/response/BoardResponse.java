@@ -20,6 +20,7 @@ public class BoardResponse {
     private int likeCount;
     private LocalDateTime createdAt;
     private String address;
+    private Long wishListCount;
 
     // 상세 조회 때만 들어갈 파일 리스트
     private List<BoardFileResponse> files;
@@ -35,6 +36,7 @@ public class BoardResponse {
         response.setCreatedAt(board.getCreatedAt());
         response.setLikeCount(board.getLikes().size());
         response.setAddress(board.getAddress());
+        response.setWishListCount(board.getWishListCount());
         return response;
     }
 
