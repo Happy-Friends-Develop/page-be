@@ -29,7 +29,7 @@ public class WishListService {
 
     // 찜하기
     @Transactional
-    public void addWishList(Long userId, Long boardId){
+    public void addWishList(Long userId, Long boardId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("사용자를 찾을 수 없습니다. ID : " + userId));
 
@@ -46,7 +46,7 @@ public class WishListService {
 
     // 찜 취소
     @Transactional
-    public void deleteWishList(Long userId, Long boardId){
+    public void deleteWishList(Long userId, Long boardId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("사용자를 찾을 수 없습니다. ID : " + userId));
 
@@ -64,7 +64,7 @@ public class WishListService {
 
     // 찜 목록 확인(사용자 버전)
     @Transactional(readOnly = true)
-    public List<WishListResponse> getMyWishList(Long userId){
+    public List<WishListResponse> getMyWishList(Long userId) {
         List<WishList> wishLists = wishLIstRepository.findAllByUserId(userId);
 
         return wishLists.stream()
@@ -92,4 +92,5 @@ public class WishListService {
         return nearbyWishLists.stream()
                 .map(WishListResponse::new)
                 .collect(Collectors.toList());
-    }}
+    }
+}
