@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class WishListService {
-    private final WishListRepository wishLIstRepository;
+    private final WishListRepository wishListRepository;
     private final UserRepository userRepository;
     private final BoardRepository boardRepository;
     private final GeocodingService geocodingService;
@@ -35,10 +35,9 @@ public class WishListService {
 
         Board board = boardRepository.findById(boardId)
                 .orElseThrow(() -> new BoardNotFoundException("해당 게시물을 찾을 수 없습니다. ID : " + boardId));
-
         // WishList에 저장
         WishList wishList = new WishList(user, board);
-        wishLIstRepository.save(wishList);
+        wishListRepository.save(wishList);
 
         // 해당 board 찜하기 개수 추가
         board.increaseWishlistCount();
@@ -53,11 +52,11 @@ public class WishListService {
         Board board = boardRepository.findById(boardId)
                 .orElseThrow(() -> new BoardNotFoundException("해당 게시물을 찾을 수 없습니다. ID : " + boardId));
 
-        WishList wishList = wishLIstRepository.findByUserAndBoard(user, board)
+        WishList wishList = wishListRepository.findByUserAndBoard(user, board)
                 .orElseThrow(() -> new WishListNotFoundException("찜한 적이 없어서 취소할 수 없습니다."));
 
         // db에서 삭제
-        wishLIstRepository.delete(wishList);
+        wishListRepository.delete(wishList);
         // board에서 찜하기 개수 줄이기
         board.decreaseWishlistCount();
     }
@@ -65,7 +64,7 @@ public class WishListService {
     // 찜 목록 확인(사용자 버전)
     @Transactional(readOnly = true)
     public List<WishListResponse> getMyWishList(Long userId) {
-        List<WishList> wishLists = wishLIstRepository.findAllByUserId(userId);
+        List<WishList> wishLists = wishListRepository.findAllByUserId(userId);
 
         return wishLists.stream()
                 .map(WishListResponse::new)
@@ -87,7 +86,7 @@ public class WishListService {
         // 반경 설정 (입력 없으면 기본 10km)
         double searchRadius = (radius != null) ? radius : 10.0;
 
-        List<WishList> nearbyWishLists = wishLIstRepository.findNearbyWishLists(userId, myLat, myLon, searchRadius);
+        List<WishList> nearbyWishLists = wishListRepository.findNearbyWishLists(userId, myLat, myLon, searchRadius);
 
         return nearbyWishLists.stream()
                 .map(WishListResponse::new)
