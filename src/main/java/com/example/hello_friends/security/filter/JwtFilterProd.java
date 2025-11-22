@@ -89,6 +89,9 @@ public class JwtFilterProd extends JwtFilter {
         else if (path.startsWith("/api/user/register") && method.equals("POST")){
             return true;
         }
+        else if (path.startsWith("/api/user/check") && method.equals("GET")){
+            return true;
+        }
         return false;
     }
 }
