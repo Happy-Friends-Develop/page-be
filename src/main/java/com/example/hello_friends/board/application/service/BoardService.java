@@ -174,7 +174,7 @@ public class BoardService {
         if (isAdmin && !isAuthor) {
             User boardAuthor = board.getUser();
             String notificationContent = "회원님의 게시글이 관리자에 의해 삭제되었습니다. 자세한 내용은 고객센터에 문의해주세요.";
-            String notificationUrl = "/my-page/posts";
+            String notificationUrl = "/myPage/posts";
 
             notificationService.send(boardAuthor, notificationContent, notificationUrl);
         }
