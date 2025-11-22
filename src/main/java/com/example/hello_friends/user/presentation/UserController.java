@@ -1,5 +1,6 @@
 package com.example.hello_friends.user.presentation;
 
+import com.example.hello_friends.auth.application.AuthService;
 import com.example.hello_friends.common.response.Resp;
 import com.example.hello_friends.security.annotation.Auth;
 import com.example.hello_friends.security.filter.JwtPrincipalDto;
@@ -24,6 +25,7 @@ import java.util.List;
 public class UserController {
     private final UserService userService;
     private final BlackUserService blackUserService;
+    private final AuthService authService;
 
     @Operation(summary = "회원가입", description = "회원가입합니다.")
     @PostMapping("/api/user/register")
@@ -97,5 +99,13 @@ public class UserController {
                 request.reason()  // 두 번째: 관리자 메모 (adminMemo)
         );
         return ResponseEntity.ok(Resp.ok("경고가 정상적으로 처리되었습니다"));
+    }
+
+    @Operation(summary = "아이디 중복확인", description = "회원가입에서 아이디 중복확인합니다.")
+    @GetMapping("/api/user/check")
+    public ResponseEntity<Resp<Boolean>> checkId(@RequestParam String loginId){
+        boolean isDuplicate = authService.checkLoginIdDuplicate(loginId);
+
+        return ResponseEntity.ok(Resp.ok(isDuplicate));
     }
 }

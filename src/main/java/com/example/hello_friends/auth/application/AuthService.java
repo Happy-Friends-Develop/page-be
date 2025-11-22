@@ -27,4 +27,9 @@ public class AuthService {
         // 인증 정보 저장하고 비밀번호는 암호화 후 저장
         return authRepository.save(new Auth(authBody.getLoginId(), passwordEncoder.encode(authBody.getPwd())));
     }
+
+    @Transactional(readOnly = true)
+    public boolean checkLoginIdDuplicate(String loginId) {
+        return authRepository.existsByLoginId(loginId);
+    }
 }
